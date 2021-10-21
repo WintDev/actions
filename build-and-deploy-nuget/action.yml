@@ -7,12 +7,13 @@ inputs:
     required: true
   version:
     description: "Version to be set on nuget package"   
+
+env:
+    PROJECT_PATH: ${{ inputs.project_path }}
     
 runs:
   using: "composite"
-  env:
-    PROJECT_PATH: ${{ inputs.project_path }}
-    
+      
   steps:
     - name: 'Checkout'
       uses: actions/checkout@v2
