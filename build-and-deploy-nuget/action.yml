@@ -8,15 +8,14 @@ inputs:
   version:
     description: "Version to be set on nuget package"   
     
-env:
-  PROJECT_PATH: ${{ inputs.project_path }}
-  PACKAGE_OUTPUT_DIRECTORY: ${{ github.workspace }}/outputnuget
-  NUGET_SOURCE_URL: 'https://nuget.pkg.github.com/WintDev/index.json'
-  NUGET_VERSION_ENDING: ''
-  GITHUB_REF: ${{ github.ref }}
-  
 runs:
   using: "composite"
+  env:
+    PROJECT_PATH: ${{ inputs.project_path }}
+    PACKAGE_OUTPUT_DIRECTORY: ${{ github.workspace }}/outputnuget
+    NUGET_SOURCE_URL: 'https://nuget.pkg.github.com/WintDev/index.json'
+    NUGET_VERSION_ENDING: ''
+    GITHUB_REF: ${{ github.ref }}
   steps:
     - name: 'Checkout'
       uses: actions/checkout@v2
@@ -29,12 +28,12 @@ runs:
         raw=$(git branch -r --contains ${{ env.GITHUB_REF }})
         branch=${raw/origin\/}
         echo ::set-output name=BRANCH::$branch
-        
+
     - name: Set prefix
       if: ${{ steps.get-branch.outputs.BRANCH != 'main' }}
       run: |
         echo "NUGET_VERSION_ENDING=-beta" >> $GITHUB_ENV
-        
+
     - name: "Test Echo"
       run: echo ${{ env.NUGET_VERSION_ENDING }}
       
