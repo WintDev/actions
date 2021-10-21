@@ -6,8 +6,7 @@ inputs:
     description: "Path to nuget project that will be build and deployed"
     required: true
   version:
-    description: "Version to be set on nuget package"
-    required: true   
+    description: "Version to be set on nuget package"   
     
 env:
   PROJECT_PATH: ${{ inputs.project_path }}
