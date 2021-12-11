@@ -1,4 +1,4 @@
-name: build-pack-upload
+name: build-pack-upload-package
 on:
   workflow_call:
     inputs:
@@ -36,6 +36,13 @@ jobs:
     strategy:
       fail-fast: true
     steps:
+      - name: Install dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: |
+            5.0.x
+            6.0.x
+
       - name: Add GitHub Nuget registry
         run: dotnet nuget add source --username WintDev --password ${{ secrets.nuget-read-pat }} --store-password-in-clear-text --name WintDev "${{ env.WINT_NUGET_SOURCE_URL }}"
 
@@ -43,13 +50,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-
-      - name: Install dotnet
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: |
-            5.0.x
-            6.0.x
 
       - name: Install GitVersion (v5.x)
         uses: gittools/actions/gitversion/setup@v0.9.7

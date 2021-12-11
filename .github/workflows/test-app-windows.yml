@@ -1,0 +1,47 @@
+name: test-app-windows
+on:
+  workflow_call:
+    inputs:
+      solution-name:
+        description: 'The name of the solution to build and test.'
+        required: true
+        type: string
+
+    secrets:
+      nuget-read-pat:
+        description: 'The Personal Access Token used to access the WintDev internal nuget feed when restoring.'
+        required: true
+
+jobs:
+  build:
+    name: Build and Test (${{ inputs.solution-name }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: true
+    env:
+      CONFIGURATION: release
+      WINT_NUGET_SOURCE_URL: 'https://nuget.pkg.github.com/WintDev/index.json'
+
+    steps:
+      - name: Install dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: |
+            3.1.x
+            5.0.x
+            6.0.x
+
+      - name: Add GitHub Nuget registry
+        run: dotnet nuget add source --username WintDev --password ${{ secrets.nuget-read-pat }} --store-password-in-clear-text --name WintDev "${{ env.WINT_NUGET_SOURCE_URL }}"
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Restore
+        run: dotnet restore ${{ inputs.solution-name }}
+
+      - name: Build
+        run: dotnet build ${{ inputs.solution-name }} --configuration ${{ env.CONFIGURATION }} --no-restore
+
+      - name: Test
+        run: dotnet test ${{ inputs.solution-name }} --configuration ${{ env.CONFIGURATION }} --no-build
