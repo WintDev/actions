@@ -1,0 +1,49 @@
+name: build-test-app
+on:
+  workflow_call:
+    inputs:
+      solution-name:
+        description: 'The name of the solution to build and test.'
+        required: true
+        type: string
+
+    secrets:
+      nuget-read-pat:
+        description: 'The Personal Access Token used to access the WintDev internal nuget feed when restoring.'
+        required: true
+
+jobs:
+  build:
+    name: Build and Test (${{ inputs.}})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+    env:
+      CONFIGURATION: release
+      SOLUTION_NAME: 'Wint.Surveys.Service.sln'
+
+    steps:
+      - name: Add GitHub Nuget registry
+        run: dotnet nuget add source --username WintDev --password ${{ secrets.NUGET_READ_PAT }} --store-password-in-clear-text --name WintDev "https://nuget.pkg.github.com/WintDev/index.json"
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: |
+            3.1.x
+            5.0.x
+            6.0.x
+
+      - name: Restore
+        run: dotnet restore "${{ inputs.solution-name }}" --configuration ${{ env.CONFIGURATION }}
+
+      - name: Build
+        run: dotnet build ${{ solution-name }} --configuration ${{ env.CONFIGURATION }} --no-restore
+
+      - name: Test
+        run: dotnet test ${{ solution-name }} --configuration ${{ env.CONFIGURATION }} --no-build
