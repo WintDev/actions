@@ -10,8 +10,8 @@ The artifacts produced has a retention of one day.
 #### Inputs
 - solution-name
   - The name of solution to build, test and publish. Example **mySolution.sln**.
-- assembly-name
-  - The name of the entry assembly of the app. 
+- assembly-url
+  - The path to the entry assembly of the app. This is the input to the publish command that will produce the artifacts of the build. 
 - artifacts-prefix
   - The prefix of the artifacts that will contain the function app bits. 
 - package-name
@@ -29,14 +29,14 @@ jobs:
     uses: WintDev/actions/.github/workflows/build-app.yml@v1
     with:
       solution-name: Wint.MyService.sln
-      assembly-name: Wint.MyService.csproj
+      assembly-url: Wint.MyService/Wint.MyService.csproj
       artifacts-prefix: wint-myservice
       package-name: wint-myservice-package
     secrets:
       nuget-read-pat: ${{ secrets.NUGET_READ_PAT }}
 ```
 
-### build-pack-upload (build-packages.yml)
+### build-pack-upload (build-package.yml)
 Call this workflow to push a nuget package from a packable assembly in the repository.
 #### Inputs
 - assembly-url:
@@ -59,7 +59,7 @@ The example below builds a solution, MyService.sln and publishes an artifact for
 ```yaml
 jobs:
   build_packages:
-    name: Build packages assembly (Wint.MyService.Model)
+    name: Build package assembly (Wint.MyService.Model)
     uses: WintDev/actions/.github/workflows/build-packages.yml@v1
     with:
       assembly-url: Wint.MyService.Models/Wint.MyService.Models.csproj
