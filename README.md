@@ -2,6 +2,8 @@
 This repository contains reusable workflows and common actions used by the **WintDev** organization CI/CD.
 
 ## Workflows
+**Note:** Because of the [github actions reusable workflow limitations](https://docs.github.com/en/actions/learn-github-actions/reusing-workflows#limitations), there are decicated shared workflows for testing on the Windows and Ubuntu environments respectively. For more information on this,  see: [test-app-windows](#test-app-windows), and [test-app-ubuntu](#test-app-ubuntu). 
+
 ### build-test-upload (build.app.yml)
 Call this workflow to build, test and publish the build artifacts to a downloadable artifact.
 
@@ -10,8 +12,8 @@ The artifacts produced has a retention of one day.
 #### Inputs
 - solution-name
   - The name of solution to build, test and publish. Example **mySolution.sln**.
-- assembly-name
-  - The name of the entry assembly of the app. 
+- assembly-url
+  - The path to the entry assembly of the app. This is the input to the publish command that will produce the artifacts of the build. 
 - artifacts-prefix
   - The prefix of the artifacts that will contain the function app bits. 
 - package-name
@@ -29,14 +31,14 @@ jobs:
     uses: WintDev/actions/.github/workflows/build-app.yml@v1
     with:
       solution-name: Wint.MyService.sln
-      assembly-name: Wint.MyService.csproj
+      assembly-url: Wint.MyService/Wint.MyService.csproj
       artifacts-prefix: wint-myservice
       package-name: wint-myservice-package
     secrets:
       nuget-read-pat: ${{ secrets.NUGET_READ_PAT }}
 ```
 
-### build-pack-upload (build-packages.yml)
+### build-pack-upload (build-package.yml)
 Call this workflow to push a nuget package from a packable assembly in the repository.
 #### Inputs
 - assembly-url:
@@ -59,7 +61,7 @@ The example below builds a solution, MyService.sln and publishes an artifact for
 ```yaml
 jobs:
   build_packages:
-    name: Build packages assembly (Wint.MyService.Model)
+    name: Build package assembly (Wint.MyService.Model)
     uses: WintDev/actions/.github/workflows/build-packages.yml@v1
     with:
       assembly-url: Wint.MyService.Models/Wint.MyService.Models.csproj
@@ -68,5 +70,53 @@ jobs:
     secrets:
       codesigning-cert: ${{ secrets.CODESIGNING_WINT_SE }}    
       codesigning-cert-pwd: ${{ secrets.CODESIGNING_WINT_SE_PWD }}
+      nuget-read-pat: ${{ secrets.NUGET_READ_PAT }}
+```
+
+### test-app-ubuntu (test-app-ubuntu.yml) (#test-app-ubuntu)
+Call this workflow to build and test a solution on the Ubuntu operating system.
+
+#### Inputs
+- solution-name
+  - The name of solution to build, test and publish. Example **mySolution.sln**.
+
+#### Secrets
+- nuget-read-pat
+  - The Personal Access Token used to access the WintDev internal nuget feed during restore. 
+
+#### Example
+The example below builds a solution, MyService.sln and publishes an artifact for the app called MyService
+```yaml
+jobs:
+  build:
+    name: test-ubuntu
+    uses: WintDev/actions/.github/workflows/test-app-ubuntu.yml@v1
+    with:
+      solution-name: Wint.MyService.sln
+    secrets:
+      nuget-read-pat: ${{ secrets.NUGET_READ_PAT }}
+```
+
+### test-app-windows (test-app.windows.yml) (#test-app-windows)
+Call this workflow to build and test a solution on the Windows operating system.
+
+#### Inputs
+- solution-name
+  - The name of solution to build, test and publish. Example **mySolution.sln**.
+
+#### Secrets
+- nuget-read-pat
+  - The Personal Access Token used to access the WintDev internal nuget feed during restore. 
+
+#### Example
+The example below builds a solution, MyService.sln and publishes an artifact for the app called MyService
+```yaml
+jobs:
+  build:
+    name: test-windows
+    uses: WintDev/actions/.github/workflows/test-app-windows.yml@v1
+    with:
+      solution-name: Wint.MyService.sln
+    secrets:
       nuget-read-pat: ${{ secrets.NUGET_READ_PAT }}
 ```

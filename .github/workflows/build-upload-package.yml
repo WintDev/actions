@@ -1,0 +1,92 @@
+name: build-pack-upload-package
+on:
+  workflow_call:
+    inputs:
+      assembly-url:
+        description: 'The path to the assembly that would be packed.'
+        required: true
+        type: string
+
+      assembly-prefix:
+        description: 'The prefix for the build artifacts to sign.'
+        required: true
+        type: string
+
+      artifacts-prefix:
+        description: 'The name of the artifacts that contain the .nupkg files produced by the build.'
+        required: true
+        type: string
+    secrets:
+      codesigning-cert:
+        description: 'The base64 string that represent the code signing certificate.'
+        required: true
+      codesigning-cert-pwd:
+        description: 'The password for the private key of the code signing certificate.'
+        required: true
+      nuget-read-pat:
+        description: 'The Personal Access Token (PAT) used to access the Wintdev internal nuget feed when restoring.'
+        required: true
+jobs:
+  build:
+    name: Build (${{ inputs.assembly_url }})
+    runs-on: windows-latest
+    env:
+      CONFIGURATION: release
+      WINT_NUGET_SOURCE_URL: 'https://nuget.pkg.github.com/WintDev/index.json'
+    strategy:
+      fail-fast: true
+    steps:
+      - name: Install dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: |
+            5.0.x
+            6.0.x
+
+      - name: Add GitHub Nuget registry
+        run: dotnet nuget add source --username WintDev --password ${{ secrets.nuget-read-pat }} --store-password-in-clear-text --name WintDev "${{ env.WINT_NUGET_SOURCE_URL }}"
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install GitVersion (v5.x)
+        uses: gittools/actions/gitversion/setup@v0.9.7
+        with:
+          versionSpec: '5.x'
+
+      - name: Run GitVersion
+        id:   gitversion
+        uses: gittools/actions/gitversion/execute@v0.9.7
+
+      - name: Restore
+        run: dotnet restore ${{ inputs.assembly-url }}
+
+      - name: Build
+        run: |
+          dotnet build ${{ inputs.assembly-url }} --configuration ${{ env.CONFIGURATION }} /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.Sha }} /p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersion }} --no-restore
+
+      - name: Decode Signing Certificate
+        run: |
+          New-Item -ItemType directory -Path certificate
+          Set-Content -Path certificate\codesigning.wint.se.txt -Value '${{ secrets.codesigning-cert }}'
+          certutil -decode certificate\codesigning.wint.se.txt certificate\codesigning.wint.se.pfx
+
+      - name: Sign
+        run: |
+          $items = Get-ChildItem -recurse -file -include @('${{ inputs.assembly-prefix }}*.dll', '${{ inputs.assembly-prefix }}*.exe') -exclude @('*test*.dll')
+          foreach($item in $items) {
+            & 'c:\progra~2\windows kits\10\bin\10.0.17763.0\x86\signtool.exe' sign  -f 'certificate\codesigning.wint.se.pfx' -p '${{ secrets.codesigning-cert-pwd }}' -t 'http://timestamp.digicert.com' -fd 'SHA256' $item.FullName
+          }
+
+      - name: Pack
+        run: | 
+          dotnet pack ${{ inputs.assembly-url }} --configuration ${{ env.CONFIGURATION }} /p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersion }} --no-build
+      
+      - name: 'Upload package artifact(s)'
+        uses: actions/upload-artifact@v2
+        with:
+          name: '${{ inputs.artifacts-prefix }}-${{ github.run_id }}'
+          path: '**/*.nupkg'
+          retention-days: 1
