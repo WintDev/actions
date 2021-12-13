@@ -12,8 +12,8 @@ on:
         required: true
         type: string
 
-      artifacts-prefix:
-        description: 'The prefix of the artifacts that contain the function app bits.'
+      artifacts-name:
+        description: 'The name of the artifacts that will contain the function app bits.'
         required: true
         type: string
 
@@ -83,6 +83,6 @@ jobs:
       - name: 'Upload app artifact(s)'
         uses: actions/upload-artifact@v2
         with:
-          name: '${{ inputs.artifacts-prefix }}-${{ github.run_id }}'
+          name: '${{ inputs.artifacts-name }}'
           path: ${{ env.ARTIFACTS_PATH }}
           retention-days: 1
