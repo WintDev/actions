@@ -12,10 +12,6 @@ on:
         required: true
         type: string
 
-      artifacts-prefix:
-        description: 'The name of the artifacts that contain the .nupkg files produced by the build.'
-        required: true
-        type: string
     secrets:
       codesigning-cert:
         description: 'The base64 string that represent the code signing certificate.'
