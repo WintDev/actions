@@ -13,7 +13,7 @@ There are three versions available.
 **Note:** v2 is kept for legacy support. It _may_ be used when there is a need to manage pushing nuget packages and deployment of Azure Function apps manually in the workflow.
 
 ## Workflows
-**Note:** Because of the [github actions reusable workflow limitations](https://docs.github.com/en/actions/learn-github-actions/reusing-workflows#limitations), there are decicated shared workflows for testing on the Windows and Ubuntu environments respectively. For more information on this,  see: [test-app-windows](#test-app-windows), and [test-app-ubuntu](#test-app-ubuntu). 
+**Note:** Because of the [github actions reusable workflow limitations](https://docs.github.com/en/actions/learn-github-actions/reusing-workflows#limitations), there are decicated shared workflows for testing on the Windows and Ubuntu environments respectively. For more information on this,  see: [test-app-windows](#testappwindows), and [test-app-ubuntu](#testappubuntu).
 
 ### build-test-upload (build.test.upload.app.yml)
 Call this workflow to build, test and publish the built bits to a downloadable artifact.
@@ -128,7 +128,7 @@ jobs:
       nuget-read-pat: ${{ secrets.NUGET_READ_PAT }}
 ```
 
-### test-app-ubuntu (test-app-ubuntu.yml) (#test-app-ubuntu)
+### <a name="testappubuntu"></a>test-app-ubuntu (test-app-ubuntu.yml) (#test-app-ubuntu)
 Call this workflow to build and test a solution on the Ubuntu operating system.
 
 #### Inputs
@@ -152,7 +152,7 @@ jobs:
       nuget-read-pat: ${{ secrets.NUGET_READ_PAT }}
 ```
 
-### test-app-windows (test-app.windows.yml) (#test-app-windows)
+### <a name="testappwindows"></a>test-app-windows (test-app.windows.yml)
 Call this workflow to build and test a solution on the Windows operating system.
 
 #### Inputs
