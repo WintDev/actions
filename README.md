@@ -1,6 +1,17 @@
 # actions
 This repository contains reusable workflows and common actions used by the **WintDev** organization CI/CD.
 
+## Workflow versions
+There are three versions available.
+- v1
+  - Use this version for managing Azure Function Apps targeting Azure Functions v3 with code targeting .net versions < net6.
+- v2 (**depreciated**)
+  - Use this version for managing Azure Function Apps targeting Azure Functions v4 with code targeting .net6. This version is kept for legacy 
+- v3
+  - Use this version for managing Azure Function Apps targeting Azure Functions v4 with code targeting .net6.
+
+**Note:** v2 is kept for legacy support. It _may_ be used when there is a need to manage pushing nuget packages and deployment of Azure Function apps manually in the workflow.
+
 ## Workflows
 **Note:** Because of the [github actions reusable workflow limitations](https://docs.github.com/en/actions/learn-github-actions/reusing-workflows#limitations), there are decicated shared workflows for testing on the Windows and Ubuntu environments respectively. For more information on this,  see: [test-app-windows](#test-app-windows), and [test-app-ubuntu](#test-app-ubuntu). 
 
@@ -102,7 +113,7 @@ Call this workflow to push a nuget package from a packable assembly in the repos
   - The Personal Access Token used to access the WintDev internal nuget feed during restore. 
 
 #### Example
-The example below builds a solution, MyService.sln and publishes an artifact for the app called MyService
+The example below pushes a new package version of the nuget package **Wint.MyService.Models**.
 ```yaml
 jobs:
   build_packages:
