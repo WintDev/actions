@@ -12,8 +12,8 @@ on:
         required: true
         type: string
 
-      artifacts-prefix:
-        description: 'The prefix of the artifacts that contain the function app bits.'
+      artifacts-name:
+        description: 'The name of the artifacts that will contain the function app bits.'
         required: true
         type: string
 
@@ -44,12 +44,13 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: |
-            3.1.x
-            5.0.x
             6.0.x
 
       - name: Add GitHub Nuget registry
         run: dotnet nuget add source --username WintDev --password ${{ secrets.nuget-read-pat }} --store-password-in-clear-text --name WintDev "${{ env.WINT_NUGET_SOURCE_URL }}"
+
+      - name: Add Azure Nuget registry
+        run: dotnet nuget add source "http://wintnuget.azurewebsites.net/nuget"
 
       - name: Checkout
         uses: actions/checkout@v2
@@ -82,6 +83,6 @@ jobs:
       - name: 'Upload app artifact(s)'
         uses: actions/upload-artifact@v2
         with:
-          name: '${{ inputs.artifacts-prefix }}-${{ github.run_id }}'
+          name: '${{ inputs.artifacts-name }}'
           path: ${{ env.ARTIFACTS_PATH }}
           retention-days: 1
