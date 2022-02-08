@@ -74,7 +74,7 @@ jobs:
           dotnet build "${{ inputs.assembly-url }}" --configuration ${{ env.CONFIGURATION }} /p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} /p:InformationalVersion=${{ steps.gitversion.outputs.Sha }} /p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersion }} --no-restore
 
       - name: Test
-        run: dotnet test ${{ inputs.solution-name }} --configuration ${{ env.CONFIGURATION }}
+        run: dotnet test ${{ inputs.solution-name }} --filter trigger!=manual --configuration ${{ env.CONFIGURATION }}
 
       - name: Publish
         run: |

@@ -76,7 +76,7 @@ jobs:
         run: |
           $items = Get-ChildItem -recurse -file -include @('${{ inputs.assembly-prefix }}*.dll', '${{ inputs.assembly-prefix }}*.exe') -exclude @('*test*.dll')
           foreach($item in $items) {
-            & 'c:\progra~2\windows kits\10\bin\10.0.17763.0\x86\signtool.exe' sign  -f 'certificate\codesigning.wint.se.pfx' -p '${{ secrets.codesigning-cert-pwd }}' -t 'http://timestamp.digicert.com' -fd 'SHA256' $item.FullName
+            & 'c:\progra~2\windows kits\10\App Certification Kit\signtool.exe' sign  -f 'certificate\codesigning.wint.se.pfx' -p '${{ secrets.codesigning-cert-pwd }}' -t 'http://timestamp.digicert.com' -fd 'SHA256' $item.FullName
           }
 
       - name: Pack

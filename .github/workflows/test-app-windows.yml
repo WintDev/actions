@@ -45,4 +45,4 @@ jobs:
         run: dotnet build ${{ inputs.solution-name }} --configuration ${{ env.CONFIGURATION }} --no-restore
 
       - name: Test
-        run: dotnet test ${{ inputs.solution-name }} --configuration ${{ env.CONFIGURATION }} --no-build
+        run: dotnet test ${{ inputs.solution-name }} --filter trigger!=manual --configuration ${{ env.CONFIGURATION }} --no-build
