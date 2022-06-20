@@ -1,0 +1,76 @@
+name: deploy-web-app
+on:
+  workflow_call:
+    inputs:
+      artifacts-name:
+        description: 'The name of the artifacts that contain the app bits to deploy.'
+        required: true
+        type: string
+
+      assembly-prefix:
+        description: 'The prefix for the build artifacts to sign.'
+        required: true
+        type: string
+
+      app-name:
+        description: 'The name of the azure web app.'
+        required: true
+        type: string
+
+      package-name:
+        description: 'This is the location in your project to be published. By default, this value is set to app.'
+        required: true
+        type: string
+        default: 'app'
+      
+      slot-name:
+        description: 'The name of the deployment slot.'
+        required: true
+        type: string
+
+    secrets:
+      publish-profile:
+        description: 'The publish profile of the azure web app.'
+        required: true
+
+      codesigning-cert:
+        description: 'The certificate to use for code signing in base64.'
+        required: true
+
+      codesigning_pwd:
+        description: 'The password to the private key of the signing certificate.'
+        required: true
+
+jobs:
+  deploy_app:
+    name: Deploy
+    runs-on: windows-latest
+    strategy:
+      fail-fast: true
+
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v2
+        with:
+            name: '${{ inputs.artifacts-name }}'
+
+      - name: Decode Signing Certificate
+        run: |
+          New-Item -ItemType directory -Path certificate
+          Set-Content -Path certificate\codesigning.wint.se.txt -Value '${{ secrets.codesigning-cert }}'
+          certutil -decode certificate\codesigning.wint.se.txt certificate\codesigning.wint.se.pfx
+
+      - name: Sign
+        run: |
+          $items = Get-ChildItem -recurse -file -include @('{{ inputs.assembly-prefix }}*.dll', '{{ inputs.assembly-prefix }}*.exe') -exclude @('*test*.dll')
+          foreach($item in $items) {
+            & 'c:\progra~2\windows kits\10\App Certification Kit\signtool.exe' sign  -f 'certificate\codesigning.wint.se.pfx' -p '${{ secrets.codesigning_pwd }}' -t 'http://timestamp.digicert.com' -fd 'SHA256' $item.FullName
+          }
+
+      - name: Deploy web app
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: '${{ inputs.app-name }}'
+          package: '${{ inputs.package-name }}'
+          slot-name: '${{ inputs.slot-name }}'
+          publish-profile: '${{ secrets.publish-profile }}'
