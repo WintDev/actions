@@ -18,7 +18,7 @@ on:
         type: string
 
       package-name:
-        description: 'This is the location in your project to be published. By default, this value is set to app.'
+        description: 'The location in your project to be published. By default, this value is set to app.'
         required: true
         type: string
         default: 'app'

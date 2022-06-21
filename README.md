@@ -85,6 +85,61 @@ jobs:
       codesigning_pwd: ${{ secrets.CODESIGNING_WINT_SE_PWD }}
 ```
 
+### deploy-web-app (deploy-web-app.yml)
+Call this workflow to publish built artifacts to an azure web app (asp .net core web app).
+
+#### Inputs
+- artifacts-name:
+  - The name of the artifacts that contain the app bits to deploy.
+- assembly-prefix:
+  - The prefix for the build artifacts to sign, e.g. **Wint.MyDomain**
+- app-name:
+  - The name of the azure web app
+- package-name
+  - The location in your project to be published.
+- slot-name
+  - The name of the target slot where the app would be published.
+
+#### Secrets
+- publish-profile
+  - The publish profile of the azure web app.
+- codesigning-cert
+  - The certificate to use for code signing in base64.
+- codesigning_pwd:
+  - The password to the private key of the signing certificate.
+
+#### Example
+The example below builds a solution, MyWebApi.sln and uses the build artifacts to deploy an Azure Web App **MyWebApi** to a slot named __staging__.
+```yaml
+jobs:
+  build:
+    name: Build (MyWebApi)
+    uses: WintDev/actions/.github/workflows/build.test.upload.app.yml@v3
+    with:
+      solution-name: Wint.MyWebApi.sln
+      assembly-url: Wint.MyWebApi/Wint.MyWebApi.csproj
+      artifacts-name: 'wint-mywebapi-${{ github.run_id }}' # Note: We use the run id to make the artifacts from the build unique
+      package-name: wint-mywebapi-package
+    secrets:
+      nuget-read-pat: ${{ secrets.NUGET_READ_PAT }}
+
+  deploy:
+    name: Deploy (MyWebApi)
+    needs: build
+    uses: WintDev/actions/.github/workflows/deploy-web-app.yml@v3
+    with:
+      artifacts-name: 'wint-mywebapi-${{ github.run_id }}'
+      assembly-prefix: 'Wint.MyWebApi'
+      app-name: MyWebApi
+      package-name: wint-mywebapi-package
+      slot-name: staging # Note: Deploy is made to the staging slot for verification
+
+    secrets:
+      publish-profile: ${{ secrets.MYWEBAPI_PUBLISH_PROFILE }} # The publish profile should be downloaded from the azure portal and stored as a repository secret.
+      codesigning-cert: ${{ secrets.CODESIGNING_WINT_SE }}
+      codesigning_pwd: ${{ secrets.CODESIGNING_WINT_SE_PWD }}
+```
+
 ### build-pack-push-package (build-pack-push-package.yml)
 Call this workflow to push a nuget package from a packable assembly in the repository.
 #### Inputs
