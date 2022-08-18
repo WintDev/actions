@@ -35,9 +35,9 @@ jobs:
       fail-fast: true
     env:
       CONFIGURATION: release
-
       ARTIFACTS_PATH: 'artifacts/published'
-      WINT_NUGET_SOURCE_URL: 'https://nuget.pkg.github.com/WintDev/index.json'
+      WINT_GITHUB_NUGET_SOURCE_URL: 'https://nuget.pkg.github.com/WintDev/index.json'
+      WINT_AZURE_NUGET_SOURCE_URL: 'https://wintnuget.azurewebsites.net/nuget'
 
     steps:
       - name: Install dotnet
@@ -47,10 +47,10 @@ jobs:
             6.0.x
 
       - name: Add GitHub Nuget registry
-        run: dotnet nuget add source --username WintDev --password ${{ secrets.nuget-read-pat }} --store-password-in-clear-text --name WintDev "${{ env.WINT_NUGET_SOURCE_URL }}"
+        run: dotnet nuget add source --username WintDev --password ${{ secrets.nuget-read-pat }} --store-password-in-clear-text --name WintDev "${{ env.WINT_GITHUB_NUGET_SOURCE_URL }}"
 
       - name: Add Azure Nuget registry
-        run: dotnet nuget add source "http://wintnuget.azurewebsites.net/nuget"
+        run: dotnet nuget add source "${{ env.WINT_AZURE_NUGET_SOURCE_URL }}"
 
       - name: Checkout
         uses: actions/checkout@v2
@@ -63,7 +63,7 @@ jobs:
           versionSpec: '5.x'
 
       - name: Run GitVersion
-        id:   gitversion
+        id: gitversion
         uses: gittools/actions/gitversion/execute@v0.9.7
 
       - name: Restore
