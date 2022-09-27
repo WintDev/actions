@@ -1,6 +1,19 @@
 # actions
 This repository contains reusable workflows and common actions used by the **WintDev** organization CI/CD.
 
+## Workflow versions
+There are three versions available.
+- v1
+  - Use this version for managing Azure Function Apps targeting Azure Functions v3 with code targeting .net versions < net6.
+- v2 (**depreciated**)
+  - Use this version for managing Azure Function Apps targeting Azure Functions v4 with code targeting .net6. This version is kept for legacy 
+- v3
+  - Use this version for managing Azure Function Apps targeting Azure Functions v4 with code targeting .net6.
+- v4
+  - Use this version for managing Azure Function Apps targeting Azure Functions v4 with code targeting .net6. __and__ when working with [environments](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment#using-an-environment) when deploying web- or function apps.
+
+**Note:** v2 is kept for legacy support. It _may_ be used when there is a need to manage pushing nuget packages and deployment of Azure Function apps manually in the workflow.
+
 ## Workflows
 **Note:** Because of the [github actions reusable workflow limitations](https://docs.github.com/en/actions/learn-github-actions/reusing-workflows#limitations), there are decicated shared workflows for testing on the Windows and Ubuntu environments respectively. For more information on this,  see: [test-app-windows](#test-app-windows), and [test-app-ubuntu](#test-app-ubuntu). 
 
@@ -46,6 +59,16 @@ Call this workflow to publish built artifacts to an azure function app.
   - The name of the artifacts that contain the app bits to deploy.
 - assembly-prefix:
   - The prefix for the build artifacts to sign, e.g. **Wint.MyDomain**
+- app-name
+  - The name of the azure functions app.
+        required: true
+        type: string
+- environment
+  - The name of the environment where the function app would be deployed.
+    **Note:** This input is available from v4 onwards.
+- package-name
+  - This is the location in your project to be published. By default, this value is set to 'app'.
+
 #### Secrets
 - publish-profile
   - The publish profile of the azure function app.
@@ -77,10 +100,11 @@ jobs:
       artifacts-name: 'wint-myservice-${{ github.run_id }}'
       assembly-prefix: 'Wint.MyService'
       app-name: MyService
+      environment: Production      
       package-name: wint-myservice-package
 
     secrets:
-      publish-profile: ${{ secrets.MYSERVICE_PUBLISH_PROFILE }}
+      publish-profile: ${{ secrets.MYSERVICE_PRODUCTION_ENVIRONMENT_PUBLISH_PROFILE }} # The publish profile should be downloaded from the azure portal and stored as an environment secret in the environment matching the 'environment' input, i.e. 'Production' in this example.
       codesigning-cert: ${{ secrets.CODESIGNING_WINT_SE }}
       codesigning_pwd: ${{ secrets.CODESIGNING_WINT_SE_PWD }}
 ```
@@ -95,6 +119,9 @@ Call this workflow to publish built artifacts to an azure web app (asp .net core
   - The prefix for the build artifacts to sign, e.g. **Wint.MyDomain**
 - app-name:
   - The name of the azure web app
+- environment:
+  - The name of the environment where the web app would be deployed.
+    **Note:** This input is available from v4 onwards.
 - package-name
   - The location in your project to be published.
 - slot-name
@@ -131,11 +158,12 @@ jobs:
       artifacts-name: 'wint-mywebapi-${{ github.run_id }}'
       assembly-prefix: 'Wint.MyWebApi'
       app-name: MyWebApi
+      environment: Production
       package-name: wint-mywebapi-package
       slot-name: staging # Note: Deploy is made to the staging slot for verification
 
     secrets:
-      publish-profile: ${{ secrets.MYWEBAPI_PUBLISH_PROFILE }} # The publish profile should be downloaded from the azure portal and stored as a repository secret.
+      publish-profile: ${{ secrets.MYWEBAPI_PRODUCTION_ENVIRONMENT_PUBLISH_PROFILE }} # The publish profile should be downloaded from the azure portal and stored as an environment secret in the environment matching the 'environment' input, i.e. 'Production' in this example.
       codesigning-cert: ${{ secrets.CODESIGNING_WINT_SE }}
       codesigning_pwd: ${{ secrets.CODESIGNING_WINT_SE_PWD }}
 ```

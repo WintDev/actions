@@ -17,6 +17,11 @@ on:
         required: true
         type: string
 
+      environment:
+        description: 'The name of the environment where the web app would be deployed.'
+        required: true
+        type: string
+
       package-name:
         description: 'The location in your project to be published. By default, this value is set to app.'
         required: true
@@ -45,8 +50,7 @@ jobs:
   deploy_app:
     name: Deploy
     runs-on: windows-latest
-    strategy:
-      fail-fast: true
+    environment: ${{ inputs.environment }}
 
     steps:
       - name: Download Artifact
