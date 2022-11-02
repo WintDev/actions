@@ -3,28 +3,28 @@ on:
   workflow_call:
     inputs:
       solution-name:
-        description: 'The name of the solution to build and test.'
+        description: "The name of the solution to build and test."
         required: true
         type: string
 
       assembly-url:
-        description: 'The path to the entry assembly for the service app.'
+        description: "The path to the entry assembly for the service app."
         required: true
         type: string
 
       artifacts-name:
-        description: 'The name of the artifacts that will contain the function app bits.'
+        description: "The name of the artifacts that will contain the function app bits."
         required: true
         type: string
 
       package-name:
-        description: 'The name of the package contained in the artifacts published.'
+        description: "The name of the package contained in the artifacts published."
         required: true
         type: string
-        default: 'app'
+        default: "app"
     secrets:
       nuget-read-pat:
-        description: 'The Personal Access Token used to access the WintDev internal nuget feed when restoring.'
+        description: "The Personal Access Token used to access the WintDev internal nuget feed when restoring."
         required: true
 
 jobs:
@@ -35,9 +35,8 @@ jobs:
       fail-fast: true
     env:
       CONFIGURATION: release
-      ARTIFACTS_PATH: 'artifacts/published'
-      WINT_GITHUB_NUGET_SOURCE_URL: 'https://nuget.pkg.github.com/WintDev/index.json'
-      WINT_AZURE_NUGET_SOURCE_URL: 'https://wintnuget.azurewebsites.net/nuget'
+      ARTIFACTS_PATH: "artifacts/published"
+      WINT_GITHUB_NUGET_SOURCE_URL: "https://nuget.pkg.github.com/WintDev/index.json"
 
     steps:
       - name: Install dotnet
@@ -49,9 +48,6 @@ jobs:
       - name: Add GitHub Nuget registry
         run: dotnet nuget add source --username WintDev --password ${{ secrets.nuget-read-pat }} --store-password-in-clear-text --name WintDev "${{ env.WINT_GITHUB_NUGET_SOURCE_URL }}"
 
-      - name: Add Azure Nuget registry
-        run: dotnet nuget add source "${{ env.WINT_AZURE_NUGET_SOURCE_URL }}"
-
       - name: Checkout
         uses: actions/checkout@v2
         with:
@@ -60,7 +56,7 @@ jobs:
       - name: Install GitVersion (v5.x)
         uses: gittools/actions/gitversion/setup@v0.9.7
         with:
-          versionSpec: '5.x'
+          versionSpec: "5.x"
 
       - name: Run GitVersion
         id: gitversion
@@ -80,9 +76,9 @@ jobs:
         run: |
           dotnet publish "${{ inputs.assembly-url }}" --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.ARTIFACTS_PATH }}/${{ inputs.package-name }}"
 
-      - name: 'Upload app artifact(s)'
+      - name: "Upload app artifact(s)"
         uses: actions/upload-artifact@v2
         with:
-          name: '${{ inputs.artifacts-name }}'
+          name: "${{ inputs.artifacts-name }}"
           path: ${{ env.ARTIFACTS_PATH }}
           retention-days: 1
