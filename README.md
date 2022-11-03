@@ -2,7 +2,7 @@
 This repository contains reusable workflows and common actions used by the **WintDev** organization CI/CD.
 
 ## Workflow versions
-There are three versions available.
+There are four versions available.
 - v1
   - Use this version for managing Azure Function Apps targeting Azure Functions v3 with code targeting .net versions < net6.
 - v2 (**depreciated**)
