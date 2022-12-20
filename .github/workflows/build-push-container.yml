@@ -34,15 +34,11 @@ on:
       nuget-read-pat:
         description: 'The Personal Access Token used to access the WintDev internal nuget feed when restoring.'
         required: true        
-    env:
-      CONTAINER_NAME: ${{ github.event.inputs.container-name || github.repository }}
 
 jobs:
   push_container:
     name: BuildAndPush
     runs-on: ubuntu-latest
-    env:
-      CONTAINER_NAME: '${{ github.event.inputs.login-server }}/${{ env.CONTAINER_NAME }}'
 
     steps:
       - name: Checkout
@@ -59,8 +55,10 @@ jobs:
         id: get_container_name
         run: |
           INPUT_CONTAINER_NAME=${{github.event.inputs.container-name}}
-          CONTAINER_NAME=${INPUT_CONTAINER_NAME:-${{ github.repository }}}
-          CONTAINER_NAME='${{ github.event.inputs.login-server }}/${CONTAINER_NAME}'
+          REPO=${{ github.repository }}
+          NAME=${INPUT_CONTAINER_NAME:-REPO}
+          CONTAINER_NAME='${{ github.event.inputs.login-server }}/${NAME}'
+          echo "container_name=$OUTPUT" >> $GITHUB_OUTPUT
 
       - name: Get Tag from ref
         id: get_tag_ref
@@ -70,11 +68,12 @@ jobs:
         id: calculate_tag
         run: |
           TAG=${{ github.event.inputs.tag || steps.get_tag_ref.outputs.tag }}
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       - name: Build
         run: |
-          docker build . -f ${{ inputs.dockerfile }} -t '$CONTAINER_NAME:$TAG' --build-arg 'WINTDEV_NUGET_ACCESSTOKEN=${{ secrets.nuget-read-pat }}' --build-arg 'ASPNETCORE_ENVIRONMENT=${{ inputs.environment }}'
+          docker build . -f ${{ inputs.dockerfile }} -t '${{ get_container_name.outputs.container_name }}:${{ jobs.calculate_tag.outputs.tag }}' --build-arg 'WINTDEV_NUGET_ACCESSTOKEN=${{ secrets.nuget-read-pat }}' --build-arg 'ASPNETCORE_ENVIRONMENT=${{ inputs.environment }}'
 
       - name: Push
         run: |
-          docker push '$CONTAINER_NAME:${{ $TAG }}'
+          docker push '${{ get_container_name.outputs.container_name }}:${{ jobs.calculate_tag.outputs.tag }}'

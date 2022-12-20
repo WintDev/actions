@@ -18,17 +18,17 @@ jobs:
       - name: Tag Live Container
         if: github.ref == 'refs/heads/main'
         run: |
-          echo "{TAG}={latest}" >> $GITHUB_ENV
+          echo "TAG=latest" >> $GITHUB_ENV
       - name: Tag Development Container
         if: github.ref == 'refs/heads/development'
         run: |
-          echo "{TAG}={test}" >> $GITHUB_ENV
+          echo "TAG=test" >> $GITHUB_ENV
       - name: Tag Feature container
-        if: ${{ startsWith(github.ref, 'refs/heads/feature') || startsWith(github.ref, 'refs/heads/bugfix') || startsWith(github.ref, 'refs/heads/dev') }}
+        if: ${{ startsWith(github.ref, 'refs/heads/feature') || startsWith(github.ref, 'refs/heads/bugfix') || startsWith(github.ref, 'refs/heads/dev') || startsWith(github.ref, 'refs/heads/experimental') }}
         run: |
-          echo "{TAG}={dev.${{ github.sha }}" >> $GITHUB_ENV
+          echo "TAG=dev.${{ github.sha }}" >> $GITHUB_ENV
 
       - name: Set Tag Output Value
         id: set_output
         run: |
-          echo "(tag)={${{ env.TAG }}}" >> $GITHUB_OUTPUT
+          echo "tag=${{ env.TAG }}" >> $GITHUB_OUTPUT
