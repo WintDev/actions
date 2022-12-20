@@ -62,7 +62,7 @@ jobs:
 
       - name: Get Tag from ref
         id: get_tag_ref
-        uses: WintDev/actions/get-container-tag.yml@v4
+        uses: WintDev/actions/.github/workflows/get-container-tag.yml@v4
 
       - name: Calculate tag
         id: calculate_tag
