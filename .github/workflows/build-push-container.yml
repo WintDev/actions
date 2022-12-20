@@ -1,0 +1,70 @@
+name: build-push-container
+on:
+  workflow_call:
+    inputs:
+      login-server:
+        description: 'The name of the Azure Container Registry. Defaults to wintcontainer.azurecr.io'
+        required: true
+        type: string
+        default: 'wintcontainer.azurecr.io'
+      dockerfile:
+        description: 'The location of the dockerfile to build relative to the repository root. The default value is the dockerfile located at the repository root.'
+        required: true
+        type: string
+        default: 'dockerfile'
+      container-name:
+        description: 'The name of the container. If no name is provided, the repository environment variable value is used as the container name.'
+        type: string
+      tag:
+        description: 'The tag for which the cotainer would be pushed to the ACR. If not specified, the tag will be calculated based on the ref.'
+        type: string
+      environment:
+        description: 'The value that would be used as the enviroment environmet variable value. The default value is Production'
+        required: true
+        type: string
+        default: 'Production'
+
+    secrets:
+      username:
+        description: 'Container registry username.'
+        required: true
+      password:
+        description: 'Container registry password'
+        required: true
+      nuget-read-pat:
+        description: 'The Personal Access Token used to access the WintDev internal nuget feed when restoring.'
+        required: true        
+    env:
+      CONTAINER_NAME: ${{ github.event.inputs.container-name || github.repository }}
+
+jobs:
+  push_container:
+    name: BuildAndPush
+    runs-on: ubuntu-latest
+    env:
+      CONTAINER_NAME: '${{ inputs.login-server }}/${{ env.CONTAINER_NAME }}'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Login
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ inputs.login-server }}
+          username: ${{ secrets.username }}
+          password: ${{ secrets.password }}
+
+      - name: Get Tag from ref
+        id: get_tag_ref
+        uses: WintDev/actions/get-container-tag.yml@v4
+
+      - name: Build
+        env:
+          TAG: ${{ github.event.inputs.tag || get_tag_ref.outputs.tag }}
+        run: |
+          docker build . -f ${{ inputs.dockerfile }} -t '${{ env.CONTAINER_NAME }}:${{ env.TAG }}' --build-arg 'WINTDEV_NUGET_ACCESSTOKEN=${{ secrets.nuget-read-pat }}' --build-arg 'ASPNETCORE_ENVIRONMENT=${{ inputs.environment }}'
+
+      - name: Push
+        run: |
+          docker push '${{ env.CONTAINER_NAME }}:${{ env.TAG }}'
