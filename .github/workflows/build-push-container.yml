@@ -58,10 +58,7 @@ jobs:
       - name: Calculate Container name
         id: get_container_name
         run: |
-          INPUT_CONTAINER_NAME=${{ inputs.container-name }}
-          REPO=${{ github.repository }}
-          NAME=${{INPUT_CONTAINER_NAME || REPO}}
-          CONTAINER_NAME='${{ inputs.login-server }}/$NAME'
+          CONTAINER_NAME='${{ inputs.login-server }}/${{inputs.container-name || github.repository }}'
           echo "container_name=$CONTAINER_NAME" >> $GITHUB_OUTPUT
 
       - name: Calculate tag
