@@ -62,7 +62,7 @@ jobs:
           REPO=${{ github.repository }}
           NAME=${INPUT_CONTAINER_NAME:-REPO}
           CONTAINER_NAME='${{ github.event.inputs.login-server }}/${NAME}'
-          echo "container_name=$OUTPUT" >> $GITHUB_OUTPUT
+          echo "container_name=$CONTAINER_NAME" >> $GITHUB_OUTPUT
 
       - name: Calculate tag
         id: calculate_tag
