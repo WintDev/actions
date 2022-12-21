@@ -64,9 +64,7 @@ jobs:
       - name: Calculate tag
         id: calculate_tag
         run: |
-          REFTAG=${{ needs.get_tag.outputs.tag }}
-          INPUT_TAG=${{ inputs.tag }}
-          TAG=${{ INPUT_TAG || REFTAG }}
+          TAG=${{ inputs.tag || needs.get_tag.outputs.tag }}
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       - name: Build
