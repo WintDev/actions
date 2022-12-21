@@ -36,6 +36,10 @@ on:
         required: true        
 
 jobs:
+  get_tag:
+        name: Get Tag from ref
+        uses: WintDev/actions/.github/workflows/get-container-tag.yml@v4
+
   push_container:
     name: BuildAndPush
     runs-on: ubuntu-latest
@@ -60,14 +64,10 @@ jobs:
           CONTAINER_NAME='${{ github.event.inputs.login-server }}/${NAME}'
           echo "container_name=$OUTPUT" >> $GITHUB_OUTPUT
 
-      - name: Get Tag from ref
-        id: get_tag_ref
-        uses: WintDev/actions/.github/workflows/get-container-tag.yml@v4
-
       - name: Calculate tag
         id: calculate_tag
         run: |
-          TAG=${{ github.event.inputs.tag || steps.get_tag_ref.outputs.tag }}
+          TAG=${{ github.event.inputs.tag || needs.get_tag.outputs.tag }}
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       - name: Build
