@@ -58,21 +58,23 @@ jobs:
       - name: Calculate Container name
         id: get_container_name
         run: |
-          INPUT_CONTAINER_NAME=${{github.event.inputs.container-name}}
+          INPUT_CONTAINER_NAME=${{ inputs.container-name }}
           REPO=${{ github.repository }}
           NAME=${INPUT_CONTAINER_NAME:-REPO}
-          CONTAINER_NAME='${{ github.event.inputs.login-server }}/${NAME}'
+          CONTAINER_NAME='${{ inputs.login-server }}/${NAME}'
           echo "container_name=$CONTAINER_NAME" >> $GITHUB_OUTPUT
 
       - name: Calculate tag
         id: calculate_tag
         run: |
-          TAG=${{ github.event.inputs.tag || needs.get_tag.outputs.tag }}
+          REFTAG=${{ needs.get_tag.outputs.tag }}
+          INPUT_TAG=${{ inputs.tag }}
+          TAG=${{ INPUT_TAG:-REFTAG }}
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       - name: Build
         run: |
-          docker build . -f ${{ inputs.dockerfile }} -t '${{ steps.get_container_name.outputs.container_name }}:${{ steps.calculate_tag.outputs.tag }}' --build-arg 'WINTDEV_NUGET_ACCESSTOKEN=${{ secrets.nuget-read-pat }}' --build-arg 'ASPNETCORE_ENVIRONMENT=${{ github.event.inputs.environment }}'
+          docker build . -f ${{ inputs.dockerfile }} -t '${{ steps.get_container_name.outputs.container_name }}:${{ steps.calculate_tag.outputs.tag }}' --build-arg 'WINTDEV_NUGET_ACCESSTOKEN=${{ secrets.nuget-read-pat }}' --build-arg 'ASPNETCORE_ENVIRONMENT=${{ inputs.environment }}'
 
       - name: Push
         run: |
