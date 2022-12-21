@@ -11,7 +11,11 @@ on:
         description: 'The location of the dockerfile to build relative to the repository root. The default value is the dockerfile located at the repository root.'
         required: true
         type: string
-        default: 'dockerfile'
+        default: 'Dockerfile'
+      working-directory:
+        description: The 
+        type: string
+
       container-name:
         description: 'The name of the container. If no name is provided, the repository environment variable value is used as the container name.'
         type: string
@@ -33,7 +37,7 @@ on:
         required: true
       nuget-read-pat:
         description: 'The Personal Access Token used to access the WintDev internal nuget feed when restoring.'
-        required: true        
+        required: true
 
 jobs:
   get_tag:
@@ -69,6 +73,7 @@ jobs:
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       - name: Build
+        working-directory: ${{ inputs.working-directory }}
         run: |
           docker build . -f ${{ inputs.dockerfile }} -t '${{ steps.get_container_name.outputs.container_name }}:${{ steps.calculate_tag.outputs.tag }}' --build-arg 'WINTDEV_NUGET_ACCESSTOKEN=${{ secrets.nuget-read-pat }}' --build-arg 'ASPNETCORE_ENVIRONMENT=${{ inputs.environment }}'
 
