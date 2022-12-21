@@ -37,11 +37,12 @@ on:
 
 jobs:
   get_tag:
-        name: Get Tag from ref
-        uses: WintDev/actions/.github/workflows/get-container-tag.yml@v4
+    name: Get Tag from ref
+    uses: WintDev/actions/.github/workflows/get-container-tag.yml@v4
 
   push_container:
     name: BuildAndPush
+    needs: get_tag
     runs-on: ubuntu-latest
 
     steps:
