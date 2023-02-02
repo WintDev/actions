@@ -1,0 +1,99 @@
+name: build-push-container
+on:
+  workflow_call:
+    inputs:
+      login-server:
+        description: 'The name of the Azure Container Registry. Defaults to wintcontainer.azurecr.io'
+        type: string
+        default: 'wintcontainer.azurecr.io'
+      dockerfile:
+        description: 'The location of the dockerfile to build relative to the repository root. The default value is the dockerfile located at the repository root.'
+        type: string
+        default: 'Dockerfile'
+      working-directory:
+        description: 'The directory where the docker build would be performed.' 
+        type: string
+
+      container-name:
+        description: 'The name of the container. If no name is provided, the repository environment variable value is used as the container name.'
+        type: string
+      tag:
+        description: 'The tag for which the cotainer would be pushed to the ACR. If not specified, the tag will be calculated based on the ref.'
+        type: string
+      environment:
+        description: 'The value that would be used as the enviroment environmet variable value. The default value is Production'
+        required: true
+        type: string
+        default: 'Production'
+
+      containerAppName:
+        description: 'The name of the Container App that will be created or updated.'
+        required: true
+        type: string
+      resourceGroup:
+        description: 'The resource group that the Container App will be created in, or currently exists in.'
+        required: true
+        type: string
+      containerAppEnvironment:
+        description: 'The name of the Container App environment to use with the application. The default value is WintContainerEnvironment.'
+        type: string
+        default: 'WintContainerEnvironment'
+      location:
+        description: 'The location that the Container App (and other created resources) will be deployed to. The default value is North Europe.'
+        type: string
+        default: 'northeurope'
+
+    secrets:
+      registry-username:
+        description: 'Container registry username.'
+        required: true
+      registry-password:
+        description: 'Container registry password'
+        required: true
+      azure-credentials:
+        description: 'The credentials to use to authenticate against azure.'
+        required: true
+      nuget-read-pat:
+        description: 'The Personal Access Token used to access the WintDev internal nuget feed when restoring.'
+        required: true
+
+jobs:
+  get_tag:
+    name: Get Tag from ref
+    uses: WintDev/actions/.github/workflows/get-container-tag.yml@v4
+
+  push_container:
+    name: Build and Push docker container
+    uses: WintDev/actions/.github/workflows/build-push-container.yml@add-build-deploy-container.yml
+    with:
+      login-server: ${{ inputs.login-server }}
+      dockerfile: ${{ inputs.dockerfile }}
+      working-directory: ${{ inputs.working-directory }}
+      container-name: ${{ inputs.container-name }}
+      tag: ${{ inputs.tag }}
+      environment: ${{ inputs.environment }}
+    secrets: inherit
+
+  deploy:
+    name: Deploy azure container app
+    needs: push_container
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.azure-credentials }}
+
+      - name: echo-image-to-deploy
+        run: |
+          echo ${{ needs.push_container.outputs.container_ref }}
+
+      - name: Deploy
+        uses: azure/container-apps-deploy-action@v0
+        with:
+          imageToDeploy: ${{ needs.push_container.outputs.container_ref }}
+          containerAppName: ${{ inputs.containerAppName }}
+          resourceGroup: ${{ inputs.resourceGroup }}
+          containerAppEnvironment: ${{ inputs.containerAppEnvironment }}
+          location: ${{ inputs.location }}
