@@ -1,0 +1,20 @@
+name: get-container-name
+on:
+  workflow_call:
+    outputs:
+      name:
+        description: "The container name calculated using the current ref (i.e. repository name)."
+        value: ${{ jobs.calculate_name.outputs.name }}
+jobs:
+  calculate_name:
+    name: 'Calculate Container name'
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.set_container_name.outputs.name }}
+
+    steps:
+      - name: 'Calculate Container name'
+        id: set_container_name
+        run: |
+          NAME='${{ github.repository }}'
+          echo "name=$NAME" >> $GITHUB_OUTPUT
