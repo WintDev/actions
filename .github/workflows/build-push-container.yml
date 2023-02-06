@@ -38,16 +38,27 @@ on:
       nuget-read-pat:
         description: 'The Personal Access Token used to access the WintDev internal nuget feed when restoring.'
         required: true
+    outputs:
+      container_ref:
+        description: 'The name in the format name:tag that was pushet to the container registry.'
+        value: ${{ jobs.push_container.outputs.container_ref }}
 
 jobs:
   get_tag:
-    name: Get Tag from ref
+    name: 'Get Tag from ref'
     uses: WintDev/actions/.github/workflows/get-container-tag.yml@v4
+
+  get_name:
+    name: 'Calculate container name'
+    uses: WintDev/actions/.github/workflows/get-container-name.yml@alpha
 
   push_container:
     name: BuildAndPush
-    needs: get_tag
+    needs: [get_tag, get_name]
     runs-on: ubuntu-latest
+
+    outputs:
+      container_ref: ${{ steps.get_container_ref.outputs.container_ref }}
 
     steps:
       - name: Checkout
@@ -60,23 +71,29 @@ jobs:
           username: ${{ secrets.username }}
           password: ${{ secrets.password }}
       
-      - name: Calculate Container name
-        id: get_container_name
+      - name: 'Get Container fullname'
+        id: get_container_fullname
         run: |
-          CONTAINER_NAME='${{ inputs.login-server }}/${{inputs.container-name || github.repository }}'
-          echo "container_name=$CONTAINER_NAME" >> $GITHUB_OUTPUT
+          NAME='${{ inputs.login-server }}/${{ inputs.container-name || needs.get_name.outputs.name }}'
+          echo "name=$NAME" >> $GITHUB_OUTPUT
 
-      - name: Calculate tag
+      - name: 'Calculate tag'
         id: calculate_tag
         run: |
           TAG=${{ inputs.tag || needs.get_tag.outputs.tag }}
           echo "tag=$TAG" >> $GITHUB_OUTPUT
 
+      - name: Calculate Container ref
+        id: get_container_ref
+        run: |
+          CONTAINER_REF='${{ steps.get_container_fullname.outputs.name }}:${{ steps.calculate_tag.outputs.tag }}'
+          echo "container_ref=$CONTAINER_REF" >> $GITHUB_OUTPUT
+
       - name: Build
         working-directory: ${{ inputs.working-directory }}
         run: |
-          docker build . -f ${{ inputs.dockerfile }} -t '${{ steps.get_container_name.outputs.container_name }}:${{ steps.calculate_tag.outputs.tag }}' --build-arg 'WINTDEV_NUGET_ACCESSTOKEN=${{ secrets.nuget-read-pat }}' --build-arg 'ASPNETCORE_ENVIRONMENT=${{ inputs.environment }}'
+          docker build . -f ${{ inputs.dockerfile }} -t ${{ steps.get_container_ref.outputs.container_ref }} --build-arg 'WINTDEV_NUGET_ACCESSTOKEN=${{ secrets.nuget-read-pat }}' --build-arg 'ASPNETCORE_ENVIRONMENT=${{ inputs.environment }}'
 
       - name: Push
         run: |
-          docker push '${{ steps.get_container_name.outputs.container_name }}:${{ steps.calculate_tag.outputs.tag }}'
+          docker push ${{ steps.get_container_ref.outputs.container_ref }}
