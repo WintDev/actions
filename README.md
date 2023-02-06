@@ -226,7 +226,7 @@ jobs:
       nuget-read-pat: ${{ secrets.NUGET_READ_PAT }}
 ```
 
-### <a name="testappwindows"></a>test-app-windows (test-app.windows.yml)
+### <a name="testappwindows"></a>test-app-windows (test-app-windows.yml)
 Call this workflow to build and test a solution on the Windows operating system.
 
 #### Inputs
@@ -249,3 +249,89 @@ jobs:
     secrets:
       nuget-read-pat: ${{ secrets.NUGET_READ_PAT }}
 ```
+
+### <a name="build-push-container"></a>build-push-container (build-push-container.yml)
+Call this workflow to build and push a Docker Container to an Azure Container Registry (ACR).
+
+**NOTE:** By default this workflow will push the built contaier to the [WintContainer](https://portal.azure.com/#@wint.se/resource/subscriptions/274a26c3-e153-4564-b062-15c5e39cdfdb/resourceGroups/WintContainer/providers/Microsoft.ContainerRegistry/registries/WintContainer/overview) ACR. 
+
+#### Inputs
+- login-server
+  -The **URL** of the ACR. It will default to [wintcontainer](wintcontainer.azurecr.io).
+- dockerfile
+  - The path to the Dockerfile that contains the instruction for the build. The default value is **Dockerfile**, indicating that the file is located in the workig directory.
+- working-directory
+  - The directory from where the **docker build** commad would be issued. The default value is ., indicating that the **docker build** command would be issued from the repository root.
+- container-name
+  - The name that together with the calculated tag value will make upp the --tag argument in the container build. If not specified, the repository name will be used as the container name.
+- tag
+  - A hard-coded tag value. If not specified, the container tag will be calculated by the ref of build (i.e. the branch name).
+- environment
+  - An environment value used to populate the **ASPNETCORE_ENVIRONMENT** evironment variable in the built container. The default value is **Production**.
+  **Note:** The __environment__ input is supplied to the **docker build** command as a **--build-arg**. The target **Dockerfile** has to handle the argument for it to have any effect. The sample [Dockerfile](https://github.com/WintDev/Wint.Infrastructure/blob/main/Samples/EF/Wint.Infrastructure.Samples.WebApiSample/Dockerfile) for the EF WebApi is an example of such handling.
+
+**Note:** A common scenario is that Visual Studio has generated the Dockerfile and thus placed it in the folder of the assembly where the apps startup code is located. This has the benefit of being able to use some of the Dockerfile scaffolding when debugging the app from within a container (i.e. debugging with Docker support). The downside is that the workflow has to emulate the Visual Studio build process to match. In this scenario, the **working-directory** input would be specified to the directory of the Visual Studio solution file and the **Dockerfile** input would be specified to the apps corresponding Dockerfile.
+
+The [workflow file](https://github.com/WintDev/Wint.Infrastructure/blob/main/.github/workflows/build-EF-WebApiSample.yml) to build the sample EF WebApi container uses a **Dockerfile** originally created by Visual Studio and as such is an example of the scenario described above.
+
+Below is an example of a workflow file where the Dockerfile is located at the repository root instead.
+```yaml
+jobs:
+  build-push:
+    name: Build and Push app container
+    uses: WintDev/actions/.github/workflows/build-push-container.yml@v4
+    with:
+      login-server: wintcontainer.azurecr.io
+      dockerfile: Dockerfile
+      container-name: my.container
+```
+
+#### Secrets
+- username
+  - The username used to access the ACR. When the target ACR is the WintContainer, the organization secret **WINTCONTAINER_USERNAME** should be used.
+- password
+  - The password used to access the ACR. When the target ACR is the WintContainer, the organization secret **WINTCONTAINER_PASSWORD** should be used.
+- nuget-read-pat
+  - The Personal Access Token used to access the WintDev internal nuget feed during restore.
+
+### <a name="build-deploy-container"></a>build-deploy-container (build-deploy-container.yml)
+Call this workflow to build a Docker Container, push to an Azure Container Registry (ACR) and deploy a Container App.
+
+#### Inputs
+- login-server
+  -The **URL** of the ACR. It will default to [wintcontainer](wintcontainer.azurecr.io).
+- dockerfile
+  - The path to the Dockerfile that contains the instruction for the build. The default value is **Dockerfile**, indicating that the file is located in the workig directory.
+- working-directory
+  - The directory from where the **docker build** commad would be issued. The default value is ., indicating that the **docker build** command would be issued from the repository root.
+- container-name
+  - The name that together with the calculated tag value will make upp the --tag argument in the container build. If not specified, the repository name will be used as the container name.
+- tag
+  - A hard-coded tag value. If not specified, the container tag will be calculated by the ref of build (i.e. the branch name).
+- environment
+  - An environment value used to populate the **ASPNETCORE_ENVIRONMENT** evironment variable in the built container. The default value is **Production**.
+  **Note:** The __environment__ input is supplied to the **docker build** command as a **--build-arg**. The target **Dockerfile** has to handle the argument for it to have any effect. The sample [Dockerfile](https://github.com/WintDev/Wint.Infrastructure/blob/main/Samples/EF/Wint.Infrastructure.Samples.WebApiSample/Dockerfile) for the EF WebApi is an example of such handling.
+
+**Note:** This workflow uses the [Azure CLI az containerapp up](https://learn.microsoft.com/en-us/cli/azure/containerapp?view=azure-cli-latest#az-containerapp-up) command. The inputs below are passed to this action.
+
+- container-app-name:
+  - The name of the Container App that will be created or updated
+- container-app-resource-group:
+  - The resource group that the Container App will be created in, or currently exists in.
+- container-app-environment:
+  - The name of the Container App environment to use with the application. The default value is WintContainerEnvironment.
+- container-app-location:
+  - The location that the Container App (and other created resources) will be deployed to. The default value is **North Europe**.
+- container-app-env-vars:
+  - A list of environment variables for the container. Space-separated values in 'key=value' format. Use an empty string to clear existing values. The prefix value 'secretref:' is used to reference a secret.
+  **Example:** MY_ENV_KEY_0=ENV_VALUE_0 MY_ENV_KEY_1=ENV_VALUE_1 MY_ENV_KEY_2=secretref:MY_ENV_SECRET_2
+
+#### Secrets
+- username
+  - The username used to access the ACR. When the target ACR is the __WintContainer__, the organization secret **WINTCONTAINER_USERNAME** should be used.
+- password
+  - The password used to access the ACR. When the target ACR is the __WintContainer__, the organization secret **WINTCONTAINER_PASSWORD** should be used.
+- nuget-read-pat
+  - The Personal Access Token used to access the WintDev internal nuget feed during restore.
+
+**Note:** See the note for dockerfile location scenario in [build-push-container](#a-namebuild-push-containerabuild-push-container-build-push-containeryml) action for information on dockerfile location alternatives.

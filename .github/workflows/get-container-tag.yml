@@ -1,0 +1,34 @@
+name: get-container-tag
+on:
+  workflow_call:
+    outputs:
+      tag:
+        description: "The container tag calculated using the current ref."
+        value: ${{ jobs.calculate_tag.outputs.tag }}
+jobs:
+  calculate_tag:
+    name: 'Calculate container tag'
+    runs-on: ubuntu-latest
+    env:
+      TAG: 'latest'
+    outputs:
+      tag: ${{ steps.set_output.outputs.tag }}
+
+    steps:
+      - name: Tag Live Container
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "TAG=latest" >> $GITHUB_ENV
+      - name: Tag Development Container
+        if: github.ref == 'refs/heads/development'
+        run: |
+          echo "TAG=test" >> $GITHUB_ENV
+      - name: Tag Feature container
+        if: ${{ startsWith(github.ref, 'refs/heads/feature') || startsWith(github.ref, 'refs/heads/bugfix') || startsWith(github.ref, 'refs/heads/dev') || startsWith(github.ref, 'refs/heads/experimental') }}
+        run: |
+          echo "TAG=dev.${{ github.sha }}" >> $GITHUB_ENV
+
+      - name: Set Tag Output Value
+        id: set_output
+        run: |
+          echo "tag=${{ env.TAG }}" >> $GITHUB_OUTPUT
