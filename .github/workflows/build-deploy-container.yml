@@ -1,0 +1,143 @@
+name: build-deploy-container
+on:
+  workflow_call:
+    inputs:
+      login-server:
+        description: 'The name of the Azure Container Registry. Defaults to wintcontainer.azurecr.io'
+        type: string
+        default: 'wintcontainer.azurecr.io'
+      dockerfile:
+        description: 'The location of the dockerfile to build relative to the repository root. The default value is the dockerfile located at the repository root.'
+        type: string
+        default: 'Dockerfile'
+      working-directory:
+        description: 'The directory where the docker build would be performed.' 
+        type: string
+
+      container-name:
+        description: 'The name of the container. If no name is provided, the repository environment variable value is used as the container name.'
+        type: string
+      tag:
+        description: 'The tag for which the cotainer would be pushed to the ACR. If not specified, the tag will be calculated based on the ref.'
+        type: string
+      environment:
+        description: 'The value that would be used as the enviroment environmet variable value. The default value is Production'
+        required: true
+        type: string
+        default: 'Production'
+
+      container-app-name:
+        description: 'The name of the Container App that will be created or updated.'
+        required: true
+        type: string
+      container-app-resource-group:
+        description: 'The resource group that the Container App will be created in, or currently exists in.'
+        required: true
+        type: string
+      container-app-environment:
+        description: 'The name of the Container App environment to use with the application. The default value is WintContainerEnvironment.'
+        type: string
+        default: 'WintContainerEnvironment'
+      container-app-location:
+        description: 'The location that the Container App (and other created resources) will be deployed to. The default value is North Europe.'
+        type: string
+        default: 'northeurope'
+      container-app-env-vars:
+        type: string
+        description: |
+          'A list of environment variable(s) for the container. Space-separated values in 'key=value' format. Use an empty string to clear existing values. Prefix value with 'secretref:' to reference a secret.'
+        required: false
+    secrets:
+      username:
+        description: 'Container registry username.'
+        required: true
+      password:
+        description: 'Container registry password'
+        required: true
+      azure-credentials:
+        description: 'The credentials to use to authenticate against azure.'
+        required: true
+      nuget-read-pat:
+        description: 'The Personal Access Token used to access the WintDev internal nuget feed when restoring.'
+        required: true
+
+jobs:
+  get_tag:
+    name: 'Calculate container tag'
+    uses: WintDev/actions/.github/workflows/get-container-tag.yml@v4
+
+  set_tag:
+    name: 'Set container tag'
+    needs: get_tag
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.calculate_tag.outputs.tag }}
+    steps:
+      - name: 'Calculate tag'
+        id: calculate_tag
+        run: |
+          TAG=${{ inputs.tag || needs.get_tag.outputs.tag }}
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+  get_name:
+    name: 'Calculate container name'  
+    uses: WintDev/actions/.github/workflows/get-container-name.yml@alpha
+
+  set_name:
+    name: 'Set container name'
+    needs: get_name
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.calculate_name.outputs.name }}
+    steps:
+      - name: 'Calculate name'
+        id: calculate_name
+        run: |
+          NAME=${{ inputs.container-name || needs.get_name.outputs.name }}
+          echo "name=$NAME" >> $GITHUB_OUTPUT
+
+  push_container:
+    name: 'Build and Push docker container'
+    needs: [set_tag, set_name]
+    uses: WintDev/actions/.github/workflows/build-push-container.yml@alpha
+    with:
+      login-server: ${{ inputs.login-server }}
+      dockerfile: ${{ inputs.dockerfile }}
+      working-directory: ${{ inputs.working-directory }}
+      container-name: ${{ needs.set_name.outputs.name }}
+      tag: ${{ needs.set_tag.outputs.tag }}
+      environment: ${{ inputs.environment }}
+    secrets: inherit
+
+  deploy:
+    name: Deploy azure container app
+    needs: push_container
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 'Configure container app environment variables'
+        if: ${{ inputs.container-app-env-vars != '' }}
+        shell: bash
+        run: |
+          CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG="--env-vars ${{ inputs.container-app-env-vars }}"
+          echo "CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG=${CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG}" >> $GITHUB_ENV
+
+      - name: 'az config'
+        shell: bash
+        run: az config set extension.use_dynamic_install=yes_without_prompt
+
+      - name: 'az login'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.azure-credentials }}
+
+      - name: 'Deploy container app'
+        shell: bash
+        run: |
+          az containerapp up \
+          --name ${{ inputs.container-app-name }} \
+          --resource-group ${{ inputs.container-app-resource-group }} \
+          --image ${{ needs.push_container.outputs.container_ref }} \
+          --environment ${{ inputs.container-app-environment }} \
+          --location ${{ inputs.container-app-location }} \
+          ${{ env.CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG }}

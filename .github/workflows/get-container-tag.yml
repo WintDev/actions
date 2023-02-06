@@ -7,7 +7,7 @@ on:
         value: ${{ jobs.calculate_tag.outputs.tag }}
 jobs:
   calculate_tag:
-    name: Calculate
+    name: 'Calculate container tag'
     runs-on: ubuntu-latest
     env:
       TAG: 'latest'
