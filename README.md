@@ -279,7 +279,7 @@ Below is an example of a workflow file where the Dockerfile is located at the re
 jobs:
   build-push:
     name: Build and Push app container
-    uses: WintDev/actions/.github/workflows/build-push-container.yml@v4
+    uses: WintDev/actions/.github/workflows/build-push-container.yml@v5
     with:
       login-server: wintcontainer.azurecr.io
       dockerfile: Dockerfile
