@@ -106,20 +106,27 @@ jobs:
       working-directory: ${{ inputs.working-directory }}
       container-name: ${{ needs.set_name.outputs.name }}
       tag: ${{ needs.set_tag.outputs.tag }}
-      environment: ${{ inputs.environment }}
     secrets: inherit
 
   deploy:
     name: Deploy azure container app
     needs: push_container
     runs-on: ubuntu-latest
+    env:
+      CONTAINER_APP_ENV_VARS: 'ASPNETCORE_ENVIRONMENT=${{ inputs.environment }}'
 
     steps:
-      - name: 'Configure container app environment variables'
+      - name: 'Add environment environment variable to container app environment variables'
         if: ${{ inputs.container-app-env-vars != '' }}
         shell: bash
         run: |
-          CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG="--env-vars ${{ inputs.container-app-env-vars }}"
+          CONTAINER_APP_ENV_VARS="${{ env.CONTAINER_APP_ENV_VARS }} ${{ inputs.container-app-env-vars }}"
+          echo "CONTAINER_APP_ENV_VARS=${CONTAINER_APP_ENV_VARS}" >> $GITHUB_ENV
+
+      - name: 'Configure container app environment variables'
+        shell: bash
+        run: |
+          CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG="--env-vars ${{ env.CONTAINER_APP_ENV_VARS }}"
           echo "CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG=${CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG}" >> $GITHUB_ENV
 
       - name: 'az config'
