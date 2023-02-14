@@ -50,7 +50,7 @@ jobs:
 
   get_name:
     name: 'Calculate container name'
-    uses: WintDev/actions/.github/workflows/get-container-name.yml@alpha
+    uses: WintDev/actions/.github/workflows/get-container-name.yml@v4
 
   push_container:
     name: BuildAndPush
