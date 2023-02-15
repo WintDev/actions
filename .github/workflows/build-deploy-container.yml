@@ -35,7 +35,7 @@ on:
         required: true
         type: string
       container-app-environment:
-        description: 'The name of the Container App environment to use with the application. The default value is WintContainerEnvironment.'
+        description: 'The name of the Container App environment to use with the application. The default value is based on the environment input value. To use a specific existing environment, specify the resource id of the environment.'
         type: string
         default: 'WintContainerEnvironment'
       container-app-location:
@@ -114,8 +114,20 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CONTAINER_APP_ENV_VARS: 'ASPNETCORE_ENVIRONMENT=${{ inputs.environment }}'
-
+      CONTAINER_APP_ENVIRONMENT: ${{ inputs.container-app-environment }}
     steps:
+      - name: 'Set production container app environment'
+        if: ${{ inputs.container-app-environment == '' && (inputs.environment == 'Production' || inputs.environment == 'production') }}
+        shell: bash
+        run: |
+          echo "CONTAINER_APP_ENVIRONMENT=/subscriptions/274a26c3-e153-4564-b062-15c5e39cdfdb/resourceGroups/WintContainer/providers/Microsoft.App/managedEnvironments/WintContainerEnvironment" >> $GITHUB_ENV
+
+      - name: 'Set test container app environment'
+        if: ${{ inputs.container-app-environment == '' && inputs.environment != 'Production' && inputs.environment != 'production' }}
+        shell: bash
+        run: |
+          echo "CONTAINER_APP_ENVIRONMENT=/subscriptions/274a26c3-e153-4564-b062-15c5e39cdfdb/resourceGroups/WintContainer/providers/Microsoft.App/managedEnvironments/WintContainerEnvironmentTest" >> $GITHUB_ENV
+
       - name: 'Add environment environment variable to container app environment variables'
         if: ${{ inputs.container-app-env-vars != '' }}
         shell: bash
@@ -145,6 +157,6 @@ jobs:
           --name ${{ inputs.container-app-name }} \
           --resource-group ${{ inputs.container-app-resource-group }} \
           --image ${{ needs.push_container.outputs.container_ref }} \
-          --environment ${{ inputs.container-app-environment }} \
+          --environment ${{ env.CONTAINER_APP_ENVIRONMENT }} \
           --location ${{ inputs.container-app-location }} \
           ${{ env.CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG }}
