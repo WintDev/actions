@@ -37,7 +37,7 @@ on:
       container-app-environment:
         description: 'The name of the Container App environment to use with the application. The default value is based on the environment input value. To use a specific existing environment, specify the resource id of the environment.'
         type: string
-        default: 'WintContainerEnvironment'
+        default: ''
       container-app-location:
         description: 'The location that the Container App (and other created resources) will be deployed to. The default value is North Europe.'
         type: string
