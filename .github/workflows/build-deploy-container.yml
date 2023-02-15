@@ -64,7 +64,7 @@ on:
 jobs:
   get_tag:
     name: 'Calculate container tag'
-    uses: WintDev/actions/.github/workflows/get-container-tag.yml@v4
+    uses: WintDev/actions/.github/workflows/get-container-tag.yml@v5
 
   set_tag:
     name: 'Set container tag'
