@@ -22,11 +22,6 @@ on:
       tag:
         description: 'The tag for which the cotainer would be pushed to the ACR. If not specified, the tag will be calculated based on the ref.'
         type: string
-      environment:
-        description: 'The value that would be used as the enviroment environmet variable value. The default value is Production'
-        required: true
-        type: string
-        default: 'Production'
 
     secrets:
       username:
@@ -92,7 +87,7 @@ jobs:
       - name: Build
         working-directory: ${{ inputs.working-directory }}
         run: |
-          docker build . -f ${{ inputs.dockerfile }} -t ${{ steps.get_container_ref.outputs.container_ref }} --build-arg 'WINTDEV_NUGET_ACCESSTOKEN=${{ secrets.nuget-read-pat }}' --build-arg 'ASPNETCORE_ENVIRONMENT=${{ inputs.environment }}'
+          docker build . -f ${{ inputs.dockerfile }} -t ${{ steps.get_container_ref.outputs.container_ref }} --build-arg 'WINTDEV_NUGET_ACCESSTOKEN=${{ secrets.nuget-read-pat }}'
 
       - name: Push
         run: |
