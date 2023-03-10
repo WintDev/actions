@@ -81,7 +81,7 @@ jobs:
 
   get_name:
     name: 'Calculate container name'  
-    uses: WintDev/actions/.github/workflows/get-container-name.yml@alpha
+    uses: WintDev/actions/.github/workflows/get-container-name.yml@v5
 
   set_name:
     name: 'Set container name'
@@ -99,7 +99,7 @@ jobs:
   push_container:
     name: 'Build and Push docker container'
     needs: [set_tag, set_name]
-    uses: WintDev/actions/.github/workflows/build-push-container.yml@alpha
+    uses: WintDev/actions/.github/workflows/build-push-container.yml@v5
     with:
       login-server: ${{ inputs.login-server }}
       dockerfile: ${{ inputs.dockerfile }}
@@ -113,7 +113,7 @@ jobs:
     needs: push_container
     runs-on: ubuntu-latest
     env:
-      CONTAINER_APP_ENV_VARS: 'ASPNETCORE_ENVIRONMENT=${{ inputs.environment }}'
+      CONTAINER_APP_ENV_VARS: 'ASPNETCORE_ENVIRONMENT=${{ inputs.environment }} DOTNET_ENVIRONMENT=${{ inputs.environment }}'
       CONTAINER_APP_ENVIRONMENT: ${{ inputs.container-app-environment }}
     steps:
       - name: 'Set production container app environment'
