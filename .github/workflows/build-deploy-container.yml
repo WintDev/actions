@@ -113,7 +113,7 @@ jobs:
     needs: push_container
     runs-on: ubuntu-latest
     env:
-      CONTAINER_APP_ENV_VARS: 'ASPNETCORE_ENVIRONMENT=${{ inputs.environment }}'
+      CONTAINER_APP_ENV_VARS: 'ASPNETCORE_ENVIRONMENT=${{ inputs.environment }} DOTNET_ENVIRONMENT=${{ inputs.environment }}'
       CONTAINER_APP_ENVIRONMENT: ${{ inputs.container-app-environment }}
     steps:
       - name: 'Set production container app environment'
