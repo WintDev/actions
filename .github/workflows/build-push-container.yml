@@ -41,7 +41,7 @@ on:
 jobs:
   get_tag:
     name: 'Get Tag from ref'
-    uses: WintDev/actions/.github/workflows/get-container-tag.yml@v4
+    uses: WintDev/actions/.github/workflows/get-container-tag.yml@alpha
 
   get_name:
     name: 'Calculate container name'

@@ -41,7 +41,7 @@ The example below builds a solution, MyService.sln and publishes an artifact for
 jobs:
   build:
     name: Build (MySolution)
-    uses: WintDev/actions/.github/workflows/build.test.upload.app.yml@v3
+    uses: WintDev/actions/.github/workflows/build.test.upload.app.yml@alpha
     with:
       solution-name: Wint.MyService.sln
       assembly-url: Wint.MyService/Wint.MyService.csproj
@@ -83,7 +83,7 @@ The example below builds a solution, MyService.sln and uses the build artifacts 
 jobs:
   build:
     name: Build (MySolution)
-    uses: WintDev/actions/.github/workflows/build.test.upload.app.yml@v3
+    uses: WintDev/actions/.github/workflows/build.test.upload.app.yml@alpha
     with:
       solution-name: Wint.MyService.sln
       assembly-url: Wint.MyService/Wint.MyService.csproj
@@ -95,7 +95,7 @@ jobs:
   deploy:
     name: Deploy (MyApp)
     needs: build
-    uses: WintDev/actions/.github/workflows/deploy-function-app.yml@v3
+    uses: WintDev/actions/.github/workflows/deploy-function-app.yml@alpha
     with:
       artifacts-name: 'wint-myservice-${{ github.run_id }}'
       assembly-prefix: 'Wint.MyService'
@@ -141,7 +141,7 @@ The example below builds a solution, MyWebApi.sln and uses the build artifacts t
 jobs:
   build:
     name: Build (MyWebApi)
-    uses: WintDev/actions/.github/workflows/build.test.upload.app.yml@v3
+    uses: WintDev/actions/.github/workflows/build.test.upload.app.yml@alpha
     with:
       solution-name: Wint.MyWebApi.sln
       assembly-url: Wint.MyWebApi/Wint.MyWebApi.csproj
@@ -153,7 +153,7 @@ jobs:
   deploy:
     name: Deploy (MyWebApi)
     needs: build
-    uses: WintDev/actions/.github/workflows/deploy-web-app.yml@v3
+    uses: WintDev/actions/.github/workflows/deploy-web-app.yml@alpha
     with:
       artifacts-name: 'wint-mywebapi-${{ github.run_id }}'
       assembly-prefix: 'Wint.MyWebApi'
@@ -190,7 +190,7 @@ The example below pushes a new package version of the nuget package **Wint.MySer
 jobs:
   build_packages:
     name: Build package assembly (Wint.MyService.Model)
-    uses: WintDev/actions/.github/workflows/build-pack-push-package.yml@v3
+    uses: WintDev/actions/.github/workflows/build-pack-push-package.yml@alpha
     with:
       assembly-url: Wint.MyService.Models/Wint.MyService.Models.csproj
       assembly-prefix: 'Wint.MyService'
@@ -217,7 +217,7 @@ The example below builds a solution, MyService.sln and publishes an artifact for
 jobs:
   build:
     name: test-ubuntu
-    uses: WintDev/actions/.github/workflows/test-app-ubuntu.yml@v3
+    uses: WintDev/actions/.github/workflows/test-app-ubuntu.yml@alpha
     with:
       solution-name: Wint.MyService.sln
     secrets:
@@ -241,7 +241,7 @@ The example below builds a solution, MyService.sln and publishes an artifact for
 jobs:
   build:
     name: test-windows
-    uses: WintDev/actions/.github/workflows/test-app-windows.yml@v3
+    uses: WintDev/actions/.github/workflows/test-app-windows.yml@alpha
     with:
       solution-name: Wint.MyService.sln
     secrets:
@@ -277,7 +277,7 @@ Below is an example of a workflow file where the Dockerfile is located at the re
 jobs:
   build-push:
     name: Build and Push app container
-    uses: WintDev/actions/.github/workflows/build-push-container.yml@v4
+    uses: WintDev/actions/.github/workflows/build-push-container.yml@alpha
     with:
       login-server: wintcontainer.azurecr.io
       dockerfile: Dockerfile
