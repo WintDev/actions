@@ -64,7 +64,7 @@ on:
 jobs:
   get_tag:
     name: 'Calculate container tag'
-    uses: WintDev/actions/.github/workflows/get-container-tag.yml@alpha
+    uses: WintDev/actions/.github/workflows/get-container-tag.yml@v4
 
   set_tag:
     name: 'Set container tag'
@@ -81,7 +81,7 @@ jobs:
 
   get_name:
     name: 'Calculate container name'  
-    uses: WintDev/actions/.github/workflows/get-container-name.yml@alpha
+    uses: WintDev/actions/.github/workflows/get-container-name.yml@v4
 
   set_name:
     name: 'Set container name'
@@ -99,7 +99,7 @@ jobs:
   push_container:
     name: 'Build and Push docker container'
     needs: [set_tag, set_name]
-    uses: WintDev/actions/.github/workflows/build-push-container.yml@alpha
+    uses: WintDev/actions/.github/workflows/build-push-container.yml@v4
     with:
       login-server: ${{ inputs.login-server }}
       dockerfile: ${{ inputs.dockerfile }}
@@ -112,7 +112,7 @@ jobs:
     name: 'Build and Push latest docker container'
     if: github.ref == 'refs/heads/main'
     needs: [set_name]
-    uses: WintDev/actions/.github/workflows/build-push-container.yml@alpha
+    uses: WintDev/actions/.github/workflows/build-push-container.yml@v4
     with:
       login-server: ${{ inputs.login-server }}
       dockerfile: ${{ inputs.dockerfile }}
