@@ -108,6 +108,19 @@ jobs:
       tag: ${{ needs.set_tag.outputs.tag }}
     secrets: inherit
 
+  push_container_latest:
+    name: 'Build and Push latest docker container'
+    if: github.ref == 'refs/heads/main'
+    needs: [set_name]
+    uses: WintDev/actions/.github/workflows/build-push-container.yml@v4
+    with:
+      login-server: ${{ inputs.login-server }}
+      dockerfile: ${{ inputs.dockerfile }}
+      working-directory: ${{ inputs.working-directory }}
+      container-name: ${{ needs.set_name.outputs.name }}
+      tag: latest
+    secrets: inherit
+
   deploy:
     name: Deploy azure container app
     needs: push_container
@@ -122,7 +135,7 @@ jobs:
         run: |
           echo "CONTAINER_APP_ENVIRONMENT=/subscriptions/274a26c3-e153-4564-b062-15c5e39cdfdb/resourceGroups/WintContainer/providers/Microsoft.App/managedEnvironments/WintContainerEnvironment" >> $GITHUB_ENV
 
-      - name: 'Set test container app environment'
+      - name: 'Set staging container app environment'
         if: ${{ inputs.container-app-environment == '' && inputs.environment != 'Production' && inputs.environment != 'production' }}
         shell: bash
         run: |
