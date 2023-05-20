@@ -47,6 +47,46 @@ on:
         description: |
           'A list of environment variable(s) for the container. Space-separated values in 'key=value' format. Use an empty string to clear existing values. Prefix value with 'secretref:' to reference a secret.'
         required: false
+      
+      require-app-config-access:
+        type: boolean
+        description: |
+          'true if the container app requires access to app configuration; otherwise, false. The default value is true.'
+        required: false
+        default: true
+
+      require-keyvault-access:
+        type: boolean
+        description: |
+          'true if the container app requires key vault access; otherwise, false. The default value is true.'
+        required: false
+        default: true
+
+      keyvault-resourcegroup-staging:
+        type: string
+        description: |
+          'The name of the resource group where the key vault that will be used by the app deployed to production resides.'
+        required: false
+        default: 'WintVaultTest'
+      keyvault-staging:
+        type: string
+        description: |
+          'The name of the key vault that will be used by the app deployed to production.'
+        required: false
+        default: 'WintVaultTest'
+      keyvault-resourcegroup-production:
+        type: string
+        description: |
+          'The name of the resource group where the key vault that will be used by the app deployed to production resides.'
+        required: false
+        default: 'WintVaultLive'
+      keyvault-production:
+        type: string
+        description: |
+          'The name of the key vault that will be used by the app deployed to production.'
+        required: false
+        default: 'WintVaultLive'
+
     secrets:
       username:
         description: 'Container registry username.'
@@ -181,23 +221,25 @@ jobs:
     with:
       resourceGroup: ${{ inputs.container-app-resource-group }}
       container-app-name: ${{ inputs.container-app-name }}
-    secrets:
-      azure-credentials: ${{ secrets.azure-credentials}}
+    secrets: inherit
 
   assign_app_configuration_access:
     name: Assign App Configuration access
-    runs-on: ubuntu-latest
-    needs: get_managed_id
-    steps:
-      - name: 'az login'
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.azure-credentials }}
+    if: ${{ inputs.require-app-configuration-access }}
+    uses: WintDev/actions/.github/workflows/assign-app-configuration-access.yml@alpha
+    with:
+      principal_id: ${{ needs.get_managed_id.outputs.principal_id }}
+    secrets: inherit
 
-      - name: assign_access
-        shell: bash
-        run: |
-          az role assignment create \
-          --assignee ${{ needs.get_managed_id.outputs.principal_id }} \
-          --role "App Configuration Data Reader" \
-          --scope /subscriptions/${{ secrets.AZURE_SUBSCRIPTION }}/resourceGroups/WintServicesCommon/providers/Microsoft.AppConfiguration/configurationStores/WintServicesAppConfiguration
+  assign_keyvault_access:
+    name: Assign production service bus access
+    if: ${{ inputs.require-app-configuration-access || inputs.require-keyvault-access }}
+    needs: get_managed_id
+    uses: WintDev/actions/.github/workflows/assign-keyvault-access.yml@alpha
+    with:
+      principal_id: ${{ needs.get_managed_id.outputs.principal_id }}
+      keyvault-resourcegroup-production: ${{ inputs.keyvault-resourcegroup-production }}
+      keyvault-production: ${{ inputs.keyvault-production }}
+      keyvault-resourcegroup-staging: ${{ inputs.keyvault-resourcegroup-staging }}
+      keyvault-staging: ${{ inputs.keyvault-staging }}
+    secrets: inherit
