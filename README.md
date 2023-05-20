@@ -295,6 +295,8 @@ jobs:
 ### <a name="build-deploy-container"></a>build-deploy-container (build-deploy-container.yml)
 Call this workflow to build a Docker Container, push to an Azure Container Registry (ACR) and deploy a Container App.
 
+By default this workflow will grant the deployed container app read access to the default app configuration resource used by Wint container apps. It will also grant read access to a key vault matching the __environment__ input value. See the __Inputs__ section for more information regarding how to modify the access behavior.
+
 #### Inputs
 - login-server
   -The **URL** of the ACR. It will default to [wintcontainer](wintcontainer.azurecr.io).
@@ -323,7 +325,19 @@ Call this workflow to build a Docker Container, push to an Azure Container Regis
 - container-app-env-vars:
   - A list of environment variables for the container. Space-separated values in 'key=value' format. Use an empty string to clear existing values. The prefix value 'secretref:' is used to reference a secret.
   **Example:** MY_ENV_KEY_0=ENV_VALUE_0 MY_ENV_KEY_1=ENV_VALUE_1 MY_ENV_KEY_2=secretref:MY_ENV_SECRET_2
-
+- require-app-config-access:
+  - A boolean value indicating if the container app requires access to app configuration. The default value is true, indicating that app configuration access will be granted to the deployed container app.
+- require-keyvault-access:
+  - A boolean value indicating if the container app requires key vault access. The default value is true.
+  **Note:** The key vault targeted is calculated using a best guess estimation based on the __environment__ input value.
+- keyvault-resourcegroup-staging:
+  -The name of the resource group where the key vault that will be used by the app deployed to staging resides. The default value is __WintVaultTest__.
+- keyvault-staging:
+  -The name of the key vault that will be used by the app deployed to staging resides. The default value is __WintVaultTest__.
+- keyvault-resourcegroup-production:
+  -The name of the resource group where the key vault that will be used by the app deployed to staging resides. The default value is __WintVaultLive__.
+- keyvault-production:
+  -The name of the key vault that will be used by the app deployed to production resides. The default value is __WintVaultLive__.
 #### Secrets
 - username
   - The username used to access the ACR. When the target ACR is the __WintContainer__, the organization secret **WINTCONTAINER_USERNAME** should be used.
