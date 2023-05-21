@@ -235,7 +235,7 @@ jobs:
     name: Assign production service bus access
     if: ${{ inputs.require-app-configuration-access || inputs.require-keyvault-access }}
     needs: get_managed_id
-    uses: WintDev/actions/.github/workflows/assign-keyvault-access.yml@alpha
+    uses: WintDev/actions/.github/workflows/assign-kv-access.yml@alpha
     with:
       principal_id: ${{ needs.get_managed_id.outputs.principal_id }}
       keyvault-resourcegroup-production: ${{ inputs.keyvault-resourcegroup-production }}
