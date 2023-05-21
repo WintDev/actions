@@ -228,7 +228,7 @@ jobs:
     if: ${{ inputs.require-app-configuration-access }}
     uses: WintDev/actions/.github/workflows/assign-app-configuration-access.yml@alpha
     with:
-      principal_id: ${{ needs.get_managed_id.outputs.principal_id }}
+      principal-id: ${{ needs.get_managed_id.outputs.principal_id }}
     secrets: inherit
 
   assign_keyvault_access:
@@ -237,7 +237,7 @@ jobs:
     needs: get_managed_id
     uses: WintDev/actions/.github/workflows/assign-kv-access.yml@alpha
     with:
-      principal_id: ${{ needs.get_managed_id.outputs.principal_id }}
+      principal-id: ${{ needs.get_managed_id.outputs.principal_id }}
       keyvault-resourcegroup-production: ${{ inputs.keyvault-resourcegroup-production }}
       keyvault-production: ${{ inputs.keyvault-production }}
       keyvault-resourcegroup-staging: ${{ inputs.keyvault-resourcegroup-staging }}
