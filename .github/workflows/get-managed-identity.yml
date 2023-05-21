@@ -9,7 +9,7 @@ on:
         description: 'The credentials used to authenticate against azure. Note: requires claims to update container apps system-assigned managed identity.'
         required: true
     inputs:
-      resource_group:
+      resource-group:
         description: The name of the resource group where the resource is located, e.g. MyDomainServiceRG.
         required: true
         type: string
