@@ -219,7 +219,7 @@ jobs:
     needs: deploy
     name: Get the managed identity
     with:
-      resourceGroup: ${{ inputs.container-app-resource-group }}
+      resource-group: ${{ inputs.container-app-resource-group }}
       container-app-name: ${{ inputs.container-app-name }}
     secrets: inherit
 
