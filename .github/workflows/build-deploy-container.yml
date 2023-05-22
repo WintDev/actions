@@ -227,6 +227,7 @@ jobs:
   assign_app_configuration_access:
     name: Assign App Configuration access
     if: ${{ inputs.require-app-config-access }}
+    needs: get_managed_id
     uses: WintDev/actions/.github/workflows/assign-app-configuration-access.yml@alpha
     with:
       principal-id: ${{ needs.get_managed_id.outputs.principal_id }}
