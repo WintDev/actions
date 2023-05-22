@@ -1,0 +1,56 @@
+# Returns the managed identity (principal ID) for a container app.
+
+name: Get Managed Identity for an azure container app
+
+on:
+  workflow_call:
+    secrets:
+      azure-credentials:
+        description: 'The credentials used to authenticate against azure. Note: requires claims to update container apps system-assigned managed identity.'
+        required: true
+    inputs:
+      resource-group:
+        description: The name of the resource group where the resource is located, e.g. MyDomainServiceRG.
+        required: true
+        type: string
+      container-app-name:
+        description: The name of the resource, e.g. MyDomainServiceApp
+        required: true
+        type: string
+    outputs:
+      principal_id:
+        description: The principal ID (system assigned managed identity) of the container app.
+        value: ${{ jobs.update_containerapp.outputs.principal_id }}
+
+jobs:
+  update_containerapp:
+    runs-on: ubuntu-latest
+    outputs:
+      principal_id: ${{ steps.get_principal_id.outputs.principal_id }}
+    steps:
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.azure-credentials }}
+
+      - name: 'az config'
+        shell: bash
+        run: az config set extension.use_dynamic_install=yes_without_prompt
+
+      - name: Ensure Managed Identity
+        id: update_containerapp_identity
+        run: |
+          az containerapp identity assign \
+          --resource-group ${{ inputs.resource-group }} \
+          --name ${{ inputs.container-app-name }} \
+          --system-assigned
+
+      - name: Get Principal ID of the Managed Identity
+        id: get_principal_id
+        run: |
+          principal_id=$(az containerapp show \
+          --resource-group ${{ inputs.resource-group }} \
+          --name ${{ inputs.container-app-name }} \
+          --query identity.principalId \
+          --output tsv)
+          echo "principal_id=$principal_id" >> $GITHUB_OUTPUT

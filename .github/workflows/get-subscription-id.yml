@@ -1,0 +1,37 @@
+name: get-subscription-id
+on:
+  workflow_call:
+    inputs:
+      name:
+        description: 'The name of the Azure Subscription. Defaults to Wint'
+        type: string
+        required: false
+        default: 'Wint'
+    secrets:
+      azure-credentials:
+        description: 'The credentials to use to authenticate against azure.'
+        required: true
+
+    outputs:
+      subscription_id:
+        description: "The subscription ID."
+        value: ${{ jobs.get_subscription_id.outputs.subscription_id }}
+jobs:
+  get_subscription_id:
+    name: 'Get Subscription ID'
+    runs-on: ubuntu-latest
+    outputs:
+      subscription_id: ${{ steps.get_id.outputs.subscription_id }}
+
+    steps:
+      - name: 'az login'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.azure-credentials }}
+
+      - name: 'Get Subscription ID'
+        id: get_id
+        shell: bash
+        run: |
+          subscription_id=$(az account show --subscription "${{ inputs.name }}" --query id -o tsv)
+          echo "subscription_id=$subscription_id" >> $GITHUB_OUTPUT
