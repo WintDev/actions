@@ -221,7 +221,7 @@ jobs:
     with:
       resource-group: ${{ inputs.container-app-resource-group }}
       container-app-name: ${{ inputs.container-app-name }}
-    secrets: inherit
+    secrets: ${{ secrets.azure-credentials }}
 
   assign_app_configuration_access:
     name: Assign App Configuration access
@@ -229,7 +229,7 @@ jobs:
     uses: WintDev/actions/.github/workflows/assign-app-configuration-access.yml@alpha
     with:
       principal-id: ${{ needs.get_managed_id.outputs.principal_id }}
-    secrets: inherit
+    secrets: ${{ secrets.azure-credentials }}
 
   assign_keyvault_access:
     name: Assign production service bus access
@@ -242,4 +242,4 @@ jobs:
       keyvault-production: ${{ inputs.keyvault-production }}
       keyvault-resourcegroup-staging: ${{ inputs.keyvault-resourcegroup-staging }}
       keyvault-staging: ${{ inputs.keyvault-staging }}
-    secrets: inherit
+    secrets: ${{ secrets.azure-credentials }}

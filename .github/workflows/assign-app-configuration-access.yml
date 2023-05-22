@@ -16,8 +16,8 @@ on:
 jobs:
   get_subscription_id:
     uses: WintDev/actions/.github/workflows/get-subscription-id.yml@alpha
-    with:
-      secrets: inherit
+    secrets:
+      azure-credentials: ${{ secrets.azure-credentials }}
 
   assign_app_configuration_access:
     name: Assign App Configuration access
