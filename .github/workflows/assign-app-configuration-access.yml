@@ -14,11 +14,6 @@ on:
         required: true
 
 jobs:
-  get_subscription_id:
-    uses: WintDev/actions/.github/workflows/get-subscription-id.yml@alpha
-    secrets:
-      azure-credentials: ${{ secrets.azure-credentials }}
-
   assign_app_configuration_access:
     name: Assign App Configuration access
     runs-on: ubuntu-latest
@@ -35,4 +30,4 @@ jobs:
           az role assignment create \
           --assignee ${{ inputs.principal-id }} \
           --role "App Configuration Data Reader" \
-          --scope /subscriptions/${{ needs.get_subscription_id.outputs.id }}/resourceGroups/WintServicesCommon/providers/Microsoft.AppConfiguration/configurationStores/WintServicesAppConfiguration
+          --scope /subscriptions/${{ secrets.AZURE_SUBSCRIPTION }}/resourceGroups/WintServicesCommon/providers/Microsoft.AppConfiguration/configurationStores/WintServicesAppConfiguration
