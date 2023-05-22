@@ -240,6 +240,7 @@ jobs:
     uses: WintDev/actions/.github/workflows/assign-kv-access.yml@alpha
     with:
       principal-id: ${{ needs.get_managed_id.outputs.principal_id }}
+      environment: ${{ inputs.environment }}
       keyvault-resourcegroup-production: ${{ inputs.keyvault-resourcegroup-production }}
       keyvault-production: ${{ inputs.keyvault-production }}
       keyvault-resourcegroup-staging: ${{ inputs.keyvault-resourcegroup-staging }}

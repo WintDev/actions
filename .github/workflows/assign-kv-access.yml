@@ -7,6 +7,10 @@ on:
         description: |
           'The principal ID (system assigned managed identity) of the resource that would be granted access.'
         required: true
+      environment:
+        description: 'The value that would be used as the enviroment environmet variable value.'
+        required: true
+        type: string
       keyvault-resourcegroup-staging:
         type: string
         description: |
