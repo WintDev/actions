@@ -12,6 +12,9 @@ on:
       azure-credentials:
         description: 'The credentials to use to authenticate against azure.'
         required: true
+      azure-subscription:
+        description: 'The id of the Azure Subscription.'
+        required: true
 
 jobs:
   assign_app_configuration_access:
@@ -29,4 +32,4 @@ jobs:
           az role assignment create \
           --assignee ${{ inputs.principal-id }} \
           --role "App Configuration Data Reader" \
-          --scope /subscriptions/${{ secrets.AZURE_SUBSCRIPTION }}/resourceGroups/WintServicesCommon/providers/Microsoft.AppConfiguration/configurationStores/WintServicesAppConfiguration
+          --scope /subscriptions/${{ secrets.azure-subscription }}/resourceGroups/WintServicesCommon/providers/Microsoft.AppConfiguration/configurationStores/WintServicesAppConfiguration
