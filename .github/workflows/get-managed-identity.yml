@@ -53,4 +53,4 @@ jobs:
           --name ${{ inputs.container-app-name }} \
           --query identity.principalId \
           --output tsv)
-          echo "::set-output name=principal_id::$principal_id"
+          echo "principal_id=$principal_id" >> $GITHUB_OUTPUT

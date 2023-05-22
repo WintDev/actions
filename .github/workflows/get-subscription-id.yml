@@ -33,5 +33,5 @@ jobs:
         id: get_id
         shell: bash
         run: |
-          ID=$(az account show --subscription "${{ inputs.name }}" --query id -o tsv)
-          echo "id=$ID" >> $GITHUB_OUTPUT
+          subscription_id=$(az account show --subscription "${{ inputs.name }}" --query id -o tsv)
+          echo "id=$subscription_id" >> $GITHUB_OUTPUT
