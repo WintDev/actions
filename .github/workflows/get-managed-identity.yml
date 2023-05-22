@@ -5,7 +5,7 @@ name: Get Managed Identity for an azure container app
 on:
   workflow_call:
     secrets:
-      AZURE_CREDENTIALS:
+      azure-credentials:
         description: 'The credentials used to authenticate against azure. Note: requires claims to update container apps system-assigned managed identity.'
         required: true
     inputs:
@@ -31,7 +31,7 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          creds: ${{ secrets.azure-credentials }}
 
       - name: Ensure Managed Identity
         id: update_containerapp_identity
