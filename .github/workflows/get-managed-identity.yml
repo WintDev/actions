@@ -40,10 +40,10 @@ jobs:
       - name: Ensure Managed Identity
         id: update_containerapp_identity
         run: |
-          az containerapp update \
+          az containerapp identity assign \
           --resource-group ${{ inputs.resource-group }} \
           --name ${{ inputs.container-app-name }} \
-          --enable-managed-identity
+          --system-assigned
 
       - name: Get Principal ID of the Managed Identity
         id: get_principal_id
