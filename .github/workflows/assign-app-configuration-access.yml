@@ -30,4 +30,4 @@ jobs:
           --assignee-object-id ${{ inputs.principal-id }} \
           --assignee-principal-type ServicePrincipal \
           --role "App Configuration Data Reader" \
-          --scope /subscriptions/274a26c3-e153-4564-b062-15c5e39cdfdb/resourceGroups/WintServicesCommon/providers/Microsoft.AppConfiguration/configurationStores/WintServicesAppConfiguration
+          --scope /subscriptions/${{ env.AZURE_SUBSCRIPTION }}/resourceGroups/WintServicesCommon/providers/Microsoft.AppConfiguration/configurationStores/WintServicesAppConfiguration

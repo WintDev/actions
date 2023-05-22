@@ -173,13 +173,13 @@ jobs:
         if: ${{ inputs.container-app-environment == '' && (inputs.environment == 'Production' || inputs.environment == 'production') }}
         shell: bash
         run: |
-          echo "CONTAINER_APP_ENVIRONMENT=/subscriptions/${{secrets.AZURE_SUBSCRIPTION}}/resourceGroups/WintContainer/providers/Microsoft.App/managedEnvironments/WintContainerEnvironment" >> $GITHUB_ENV
+          echo "CONTAINER_APP_ENVIRONMENT=/subscriptions/${{ env.AZURE_SUBSCRIPTION }}/resourceGroups/WintContainer/providers/Microsoft.App/managedEnvironments/WintContainerEnvironment" >> $GITHUB_ENV
 
       - name: 'Set staging container app environment'
         if: ${{ inputs.container-app-environment == '' && inputs.environment != 'Production' && inputs.environment != 'production' }}
         shell: bash
         run: |
-          echo "CONTAINER_APP_ENVIRONMENT=/subscriptions/${{secrets.AZURE_SUBSCRIPTION}}/resourceGroups/WintContainer/providers/Microsoft.App/managedEnvironments/WintContainerEnvironmentTest" >> $GITHUB_ENV
+          echo "CONTAINER_APP_ENVIRONMENT=/subscriptions/${{ env.AZURE_SUBSCRIPTION }}/resourceGroups/WintContainer/providers/Microsoft.App/managedEnvironments/WintContainerEnvironmentTest" >> $GITHUB_ENV
 
       - name: 'Add environment environment variable to container app environment variables'
         if: ${{ inputs.container-app-env-vars != '' }}
