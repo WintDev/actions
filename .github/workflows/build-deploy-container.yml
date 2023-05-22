@@ -215,7 +215,7 @@ jobs:
           ${{ env.CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG }}
 
   get_managed_id:
-    uses: WintDev/actions/.github/workflows/get-managed-identity.yml@v5
+    uses: WintDev/actions/.github/workflows/get-managed-identity.yml@v4
     needs: deploy
     name: Get the managed identity
     with:
@@ -228,7 +228,7 @@ jobs:
     name: Assign App Configuration access
     if: ${{ inputs.require-app-config-access }}
     needs: get_managed_id
-    uses: WintDev/actions/.github/workflows/assign-app-configuration-access.yml@v5
+    uses: WintDev/actions/.github/workflows/assign-app-configuration-access.yml@v4
     with:
       principal-id: ${{ needs.get_managed_id.outputs.principal_id }}
     secrets:
@@ -238,7 +238,7 @@ jobs:
     name: Assign key vault access
     if: ${{ inputs.require-app-config-access || inputs.require-keyvault-access }}
     needs: get_managed_id
-    uses: WintDev/actions/.github/workflows/assign-kv-access.yml@v5
+    uses: WintDev/actions/.github/workflows/assign-kv-access.yml@v4
     with:
       principal-id: ${{ needs.get_managed_id.outputs.principal_id }}
       environment: ${{ inputs.environment }}
