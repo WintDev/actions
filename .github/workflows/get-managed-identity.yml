@@ -20,13 +20,13 @@ on:
     outputs:
       principal_id:
         description: The principal ID (system assigned managed identity) of the container app.
-        value: ${{ jobs.update_containerapp.outputs.principalId }}
+        value: ${{ jobs.update_containerapp.outputs.principal_id }}
 
 jobs:
   update_containerapp:
     runs-on: ubuntu-latest
     outputs:
-      principalId: ${{ steps.get_principal_id.outputs.principalId }}
+      principal_id: ${{ steps.get_principal_id.outputs.principal_id }}
     steps:
       - name: Login to Azure
         uses: azure/login@v1
