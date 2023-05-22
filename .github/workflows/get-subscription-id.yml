@@ -13,15 +13,15 @@ on:
         required: true
 
     outputs:
-      id:
-        description: "The container name calculated using the current ref (i.e. repository name)."
-        value: ${{ jobs.get_subscription_id.outputs.id }}
+      subscription_id:
+        description: "The subscription ID."
+        value: ${{ jobs.get_subscription_id.outputs.subscription_id }}
 jobs:
   get_subscription_id:
     name: 'Get Subscription ID'
     runs-on: ubuntu-latest
     outputs:
-      id: ${{ steps.get_id.outputs.id }}
+      subscription_id: ${{ steps.get_id.outputs.subscription_id }}
 
     steps:
       - name: 'az login'
@@ -34,4 +34,4 @@ jobs:
         shell: bash
         run: |
           subscription_id=$(az account show --subscription "${{ inputs.name }}" --query id -o tsv)
-          echo "id=$subscription_id" >> $GITHUB_OUTPUT
+          echo "subscription_id=$subscription_id" >> $GITHUB_OUTPUT
