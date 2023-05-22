@@ -233,7 +233,6 @@ jobs:
       principal-id: ${{ needs.get_managed_id.outputs.principal_id }}
     secrets:
       azure-credentials: ${{ secrets.azure-credentials }}
-      azure-subscription: ${{ secrets.AZURE_SUBSCRIPTION }}
 
   assign_keyvault_access:
     name: Assign key vault access
