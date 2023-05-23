@@ -31,8 +31,6 @@ jobs:
   build:
     name: Build, Test and publish (${{ inputs.solution-name }})
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
     env:
       CONFIGURATION: release
       ARTIFACTS_PATH: 'artifacts/published'
@@ -40,7 +38,7 @@ jobs:
 
     steps:
       - name: Install dotnet 7
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v3
         with:
           dotnet-version: |
             7.0.x
@@ -49,7 +47,7 @@ jobs:
         run: dotnet nuget add source --username WintDev --password ${{ secrets.nuget-read-pat }} --store-password-in-clear-text --name WintDev "${{ env.WINT_GITHUB_NUGET_SOURCE_URL }}"
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
