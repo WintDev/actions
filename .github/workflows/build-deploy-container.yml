@@ -104,7 +104,7 @@ on:
 jobs:
   get_tag:
     name: 'Calculate container tag'
-    uses: WintDev/actions/.github/workflows/get-container-tag.yml@alpha
+    uses: WintDev/actions/.github/workflows/get-container-tag.yml@v5
 
   set_tag:
     name: 'Set container tag'
@@ -121,7 +121,7 @@ jobs:
 
   get_name:
     name: 'Calculate container name'  
-    uses: WintDev/actions/.github/workflows/get-container-name.yml@alpha
+    uses: WintDev/actions/.github/workflows/get-container-name.yml@v5
 
   set_name:
     name: 'Set container name'
@@ -139,7 +139,7 @@ jobs:
   push_container:
     name: 'Build and Push docker container'
     needs: [set_tag, set_name]
-    uses: WintDev/actions/.github/workflows/build-push-container.yml@alpha
+    uses: WintDev/actions/.github/workflows/build-push-container.yml@v5
     with:
       login-server: ${{ inputs.login-server }}
       dockerfile: ${{ inputs.dockerfile }}
@@ -152,7 +152,7 @@ jobs:
     name: 'Build and Push latest docker container'
     if: github.ref == 'refs/heads/main'
     needs: [set_name]
-    uses: WintDev/actions/.github/workflows/build-push-container.yml@alpha
+    uses: WintDev/actions/.github/workflows/build-push-container.yml@v5
     with:
       login-server: ${{ inputs.login-server }}
       dockerfile: ${{ inputs.dockerfile }}
@@ -215,7 +215,7 @@ jobs:
           ${{ env.CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG }}
 
   get_managed_id:
-    uses: WintDev/actions/.github/workflows/get-managed-identity.yml@alpha
+    uses: WintDev/actions/.github/workflows/get-managed-identity.yml@v5
     needs: deploy
     name: Get the managed identity
     with:
@@ -228,7 +228,7 @@ jobs:
     name: Assign App Configuration access
     if: ${{ inputs.require-app-config-access }}
     needs: get_managed_id
-    uses: WintDev/actions/.github/workflows/assign-app-configuration-access.yml@alpha
+    uses: WintDev/actions/.github/workflows/assign-app-configuration-access.yml@v5
     with:
       principal-id: ${{ needs.get_managed_id.outputs.principal_id }}
     secrets:
@@ -238,7 +238,7 @@ jobs:
     name: Assign key vault access
     if: ${{ inputs.require-app-config-access || inputs.require-keyvault-access }}
     needs: get_managed_id
-    uses: WintDev/actions/.github/workflows/assign-kv-access.yml@alpha
+    uses: WintDev/actions/.github/workflows/assign-kv-access.yml@v5
     with:
       principal-id: ${{ needs.get_managed_id.outputs.principal_id }}
       environment: ${{ inputs.environment }}
