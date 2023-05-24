@@ -11,6 +11,8 @@ There are four versions available.
   - Use this version for managing Azure Function Apps targeting Azure Functions v4 with code targeting .net6.
 - v4
   - Use this version for managing Azure Function Apps targeting Azure Functions v4 with code targeting .net6. __and__ when working with [environments](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment#using-an-environment) when deploying web- or function apps.
+- v5
+  - Use this version for managing Azure Function Apps targeting Azure Functions v4 with code targeting .net7. __and__ when working with [environments](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment#using-an-environment) when deploying web- or function apps.  
 
 **Note:** v2 is kept for legacy support. It _may_ be used when there is a need to manage pushing nuget packages and deployment of Azure Function apps manually in the workflow.
 
