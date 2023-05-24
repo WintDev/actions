@@ -1,0 +1,33 @@
+name: assign-app-configuration-access
+on:
+  workflow_call:
+    inputs:
+      principal-id:
+        type: string
+        description: |
+          'The principal ID (system assigned managed identity) of the resource that would be granted access.'
+        required: true
+
+    secrets:
+      azure-credentials:
+        description: 'The credentials to use to authenticate against azure.'
+        required: true
+
+jobs:
+  assign_app_configuration_access:
+    name: Assign App Configuration access
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'az login'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.azure-credentials }}
+
+      - name: assign_access
+        shell: bash
+        run: |
+          az role assignment create \
+          --assignee-object-id ${{ inputs.principal-id }} \
+          --assignee-principal-type ServicePrincipal \
+          --role "App Configuration Data Reader" \
+          --scope /subscriptions/${{ vars.AZURE_SUBSCRIPTION }}/resourceGroups/WintServicesCommon/providers/Microsoft.AppConfiguration/configurationStores/WintServicesAppConfiguration

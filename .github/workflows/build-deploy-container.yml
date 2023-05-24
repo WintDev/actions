@@ -35,9 +35,9 @@ on:
         required: true
         type: string
       container-app-environment:
-        description: 'The name of the Container App environment to use with the application. The default value is WintContainerEnvironment.'
+        description: 'The name of the Container App environment to use with the application. The default value is based on the environment input value. To use a specific existing environment, specify the resource id of the environment.'
         type: string
-        default: 'WintContainerEnvironment'
+        default: ''
       container-app-location:
         description: 'The location that the Container App (and other created resources) will be deployed to. The default value is North Europe.'
         type: string
@@ -47,6 +47,46 @@ on:
         description: |
           'A list of environment variable(s) for the container. Space-separated values in 'key=value' format. Use an empty string to clear existing values. Prefix value with 'secretref:' to reference a secret.'
         required: false
+      
+      require-app-config-access:
+        type: boolean
+        description: |
+          'true if the container app requires access to app configuration; otherwise, false. The default value is true.'
+        required: false
+        default: true
+
+      require-keyvault-access:
+        type: boolean
+        description: |
+          'true if the container app requires key vault access; otherwise, false. The default value is true.'
+        required: false
+        default: true
+
+      keyvault-resourcegroup-staging:
+        type: string
+        description: |
+          'The name of the resource group where the key vault that will be used by the app deployed to production resides.'
+        required: false
+        default: 'WintVaultTest'
+      keyvault-staging:
+        type: string
+        description: |
+          'The name of the key vault that will be used by the app deployed to production.'
+        required: false
+        default: 'WintVaultTest'
+      keyvault-resourcegroup-production:
+        type: string
+        description: |
+          'The name of the resource group where the key vault that will be used by the app deployed to production resides.'
+        required: false
+        default: 'WintVaultLive'
+      keyvault-production:
+        type: string
+        description: |
+          'The name of the key vault that will be used by the app deployed to production.'
+        required: false
+        default: 'WintVaultLive'
+
     secrets:
       username:
         description: 'Container registry username.'
@@ -64,7 +104,7 @@ on:
 jobs:
   get_tag:
     name: 'Calculate container tag'
-    uses: WintDev/actions/.github/workflows/get-container-tag.yml@v4
+    uses: WintDev/actions/.github/workflows/get-container-tag.yml@main
 
   set_tag:
     name: 'Set container tag'
@@ -81,7 +121,7 @@ jobs:
 
   get_name:
     name: 'Calculate container name'  
-    uses: WintDev/actions/.github/workflows/get-container-name.yml@alpha
+    uses: WintDev/actions/.github/workflows/get-container-name.yml@main
 
   set_name:
     name: 'Set container name'
@@ -99,27 +139,59 @@ jobs:
   push_container:
     name: 'Build and Push docker container'
     needs: [set_tag, set_name]
-    uses: WintDev/actions/.github/workflows/build-push-container.yml@alpha
+    uses: WintDev/actions/.github/workflows/build-push-container.yml@main
     with:
       login-server: ${{ inputs.login-server }}
       dockerfile: ${{ inputs.dockerfile }}
       working-directory: ${{ inputs.working-directory }}
       container-name: ${{ needs.set_name.outputs.name }}
       tag: ${{ needs.set_tag.outputs.tag }}
-      environment: ${{ inputs.environment }}
+    secrets: inherit
+
+  push_container_latest:
+    name: 'Build and Push latest docker container'
+    if: github.ref == 'refs/heads/main'
+    needs: [set_name]
+    uses: WintDev/actions/.github/workflows/build-push-container.yml@main
+    with:
+      login-server: ${{ inputs.login-server }}
+      dockerfile: ${{ inputs.dockerfile }}
+      working-directory: ${{ inputs.working-directory }}
+      container-name: ${{ needs.set_name.outputs.name }}
+      tag: latest
     secrets: inherit
 
   deploy:
     name: Deploy azure container app
     needs: push_container
     runs-on: ubuntu-latest
-
+    env:
+      CONTAINER_APP_ENV_VARS: 'ASPNETCORE_ENVIRONMENT=${{ inputs.environment }} DOTNET_ENVIRONMENT=${{ inputs.environment }}'
+      CONTAINER_APP_ENVIRONMENT: ${{ inputs.container-app-environment }}
     steps:
-      - name: 'Configure container app environment variables'
+      - name: 'Set production container app environment'
+        if: ${{ inputs.container-app-environment == '' && (inputs.environment == 'Production' || inputs.environment == 'production') }}
+        shell: bash
+        run: |
+          echo "CONTAINER_APP_ENVIRONMENT=/subscriptions/${{ vars.AZURE_SUBSCRIPTION }}/resourceGroups/WintContainer/providers/Microsoft.App/managedEnvironments/WintContainerEnvironment" >> $GITHUB_ENV
+
+      - name: 'Set staging container app environment'
+        if: ${{ inputs.container-app-environment == '' && inputs.environment != 'Production' && inputs.environment != 'production' }}
+        shell: bash
+        run: |
+          echo "CONTAINER_APP_ENVIRONMENT=/subscriptions/${{ vars.AZURE_SUBSCRIPTION }}/resourceGroups/WintContainer/providers/Microsoft.App/managedEnvironments/WintContainerEnvironmentTest" >> $GITHUB_ENV
+
+      - name: 'Add environment environment variable to container app environment variables'
         if: ${{ inputs.container-app-env-vars != '' }}
         shell: bash
         run: |
-          CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG="--env-vars ${{ inputs.container-app-env-vars }}"
+          CONTAINER_APP_ENV_VARS="${{ env.CONTAINER_APP_ENV_VARS }} ${{ inputs.container-app-env-vars }}"
+          echo "CONTAINER_APP_ENV_VARS=${CONTAINER_APP_ENV_VARS}" >> $GITHUB_ENV
+
+      - name: 'Configure container app environment variables'
+        shell: bash
+        run: |
+          CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG="--env-vars ${{ env.CONTAINER_APP_ENV_VARS }}"
           echo "CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG=${CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG}" >> $GITHUB_ENV
 
       - name: 'az config'
@@ -138,6 +210,41 @@ jobs:
           --name ${{ inputs.container-app-name }} \
           --resource-group ${{ inputs.container-app-resource-group }} \
           --image ${{ needs.push_container.outputs.container_ref }} \
-          --environment ${{ inputs.container-app-environment }} \
+          --environment ${{ env.CONTAINER_APP_ENVIRONMENT }} \
           --location ${{ inputs.container-app-location }} \
           ${{ env.CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG }}
+
+  get_managed_id:
+    uses: WintDev/actions/.github/workflows/get-managed-identity.yml@main
+    needs: deploy
+    name: Get the managed identity
+    with:
+      resource-group: ${{ inputs.container-app-resource-group }}
+      container-app-name: ${{ inputs.container-app-name }}
+    secrets:
+      azure-credentials: ${{ secrets.azure-credentials }}
+
+  assign_app_configuration_access:
+    name: Assign App Configuration access
+    if: ${{ inputs.require-app-config-access }}
+    needs: get_managed_id
+    uses: WintDev/actions/.github/workflows/assign-app-configuration-access.yml@main
+    with:
+      principal-id: ${{ needs.get_managed_id.outputs.principal_id }}
+    secrets:
+      azure-credentials: ${{ secrets.azure-credentials }}
+
+  assign_keyvault_access:
+    name: Assign key vault access
+    if: ${{ inputs.require-app-config-access || inputs.require-keyvault-access }}
+    needs: get_managed_id
+    uses: WintDev/actions/.github/workflows/assign-kv-access.yml@main
+    with:
+      principal-id: ${{ needs.get_managed_id.outputs.principal_id }}
+      environment: ${{ inputs.environment }}
+      keyvault-resourcegroup-production: ${{ inputs.keyvault-resourcegroup-production }}
+      keyvault-production: ${{ inputs.keyvault-production }}
+      keyvault-resourcegroup-staging: ${{ inputs.keyvault-resourcegroup-staging }}
+      keyvault-staging: ${{ inputs.keyvault-staging }}
+    secrets: 
+      azure-credentials: ${{ secrets.azure-credentials }}
