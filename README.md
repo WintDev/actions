@@ -43,7 +43,7 @@ The example below builds a solution, MyService.sln and publishes an artifact for
 jobs:
   build:
     name: Build (MySolution)
-    uses: WintDev/actions/.github/workflows/build.test.upload.app.yml@v3
+    uses: WintDev/actions/.github/workflows/build.test.upload.app.yml@main
     with:
       solution-name: Wint.MyService.sln
       assembly-url: Wint.MyService/Wint.MyService.csproj
@@ -85,7 +85,7 @@ The example below builds a solution, MyService.sln and uses the build artifacts 
 jobs:
   build:
     name: Build (MySolution)
-    uses: WintDev/actions/.github/workflows/build.test.upload.app.yml@v3
+    uses: WintDev/actions/.github/workflows/build.test.upload.app.yml@main
     with:
       solution-name: Wint.MyService.sln
       assembly-url: Wint.MyService/Wint.MyService.csproj
@@ -97,7 +97,7 @@ jobs:
   deploy:
     name: Deploy (MyApp)
     needs: build
-    uses: WintDev/actions/.github/workflows/deploy-function-app.yml@v3
+    uses: WintDev/actions/.github/workflows/deploy-function-app.yml@main
     with:
       artifacts-name: 'wint-myservice-${{ github.run_id }}'
       assembly-prefix: 'Wint.MyService'
@@ -143,7 +143,7 @@ The example below builds a solution, MyWebApi.sln and uses the build artifacts t
 jobs:
   build:
     name: Build (MyWebApi)
-    uses: WintDev/actions/.github/workflows/build.test.upload.app.yml@v3
+    uses: WintDev/actions/.github/workflows/build.test.upload.app.yml@main
     with:
       solution-name: Wint.MyWebApi.sln
       assembly-url: Wint.MyWebApi/Wint.MyWebApi.csproj
@@ -155,7 +155,7 @@ jobs:
   deploy:
     name: Deploy (MyWebApi)
     needs: build
-    uses: WintDev/actions/.github/workflows/deploy-web-app.yml@v3
+    uses: WintDev/actions/.github/workflows/deploy-web-app.yml@main
     with:
       artifacts-name: 'wint-mywebapi-${{ github.run_id }}'
       assembly-prefix: 'Wint.MyWebApi'
@@ -192,7 +192,7 @@ The example below pushes a new package version of the nuget package **Wint.MySer
 jobs:
   build_packages:
     name: Build package assembly (Wint.MyService.Model)
-    uses: WintDev/actions/.github/workflows/build-pack-push-package.yml@v3
+    uses: WintDev/actions/.github/workflows/build-pack-push-package.yml@main
     with:
       assembly-url: Wint.MyService.Models/Wint.MyService.Models.csproj
       assembly-prefix: 'Wint.MyService'
@@ -219,7 +219,7 @@ The example below builds a solution, MyService.sln and publishes an artifact for
 jobs:
   build:
     name: test-ubuntu
-    uses: WintDev/actions/.github/workflows/test-app-ubuntu.yml@v3
+    uses: WintDev/actions/.github/workflows/test-app-ubuntu.yml@main
     with:
       solution-name: Wint.MyService.sln
     secrets:
@@ -243,7 +243,7 @@ The example below builds a solution, MyService.sln and publishes an artifact for
 jobs:
   build:
     name: test-windows
-    uses: WintDev/actions/.github/workflows/test-app-windows.yml@v3
+    uses: WintDev/actions/.github/workflows/test-app-windows.yml@main
     with:
       solution-name: Wint.MyService.sln
     secrets:
@@ -279,7 +279,7 @@ Below is an example of a workflow file where the Dockerfile is located at the re
 jobs:
   build-push:
     name: Build and Push app container
-    uses: WintDev/actions/.github/workflows/build-push-container.yml@v4
+    uses: WintDev/actions/.github/workflows/build-push-container.yml@main
     with:
       login-server: wintcontainer.azurecr.io
       dockerfile: Dockerfile
@@ -296,6 +296,8 @@ jobs:
 
 ### <a name="build-deploy-container"></a>build-deploy-container (build-deploy-container.yml)
 Call this workflow to build a Docker Container, push to an Azure Container Registry (ACR) and deploy a Container App.
+
+By default this workflow will grant the deployed container app read access to the default app configuration resource used by Wint container apps. It will also grant read access to a key vault matching the __environment__ input value. See the __Inputs__ section for more information regarding how to modify the access behavior.
 
 #### Inputs
 - login-server
@@ -325,7 +327,19 @@ Call this workflow to build a Docker Container, push to an Azure Container Regis
 - container-app-env-vars:
   - A list of environment variables for the container. Space-separated values in 'key=value' format. Use an empty string to clear existing values. The prefix value 'secretref:' is used to reference a secret.
   **Example:** MY_ENV_KEY_0=ENV_VALUE_0 MY_ENV_KEY_1=ENV_VALUE_1 MY_ENV_KEY_2=secretref:MY_ENV_SECRET_2
-
+- require-app-config-access:
+  - A boolean value indicating if the container app requires access to app configuration. The default value is true, indicating that app configuration access will be granted to the deployed container app.
+- require-keyvault-access:
+  - A boolean value indicating if the container app requires key vault access. The default value is true.
+  **Note:** The key vault targeted is calculated using a best guess estimation based on the __environment__ input value.
+- keyvault-resourcegroup-staging:
+  -The name of the resource group where the key vault that will be used by the app deployed to staging resides. The default value is __WintVaultTest__.
+- keyvault-staging:
+  -The name of the key vault that will be used by the app deployed to staging resides. The default value is __WintVaultTest__.
+- keyvault-resourcegroup-production:
+  -The name of the resource group where the key vault that will be used by the app deployed to staging resides. The default value is __WintVaultLive__.
+- keyvault-production:
+  -The name of the key vault that will be used by the app deployed to production resides. The default value is __WintVaultLive__.
 #### Secrets
 - username
   - The username used to access the ACR. When the target ACR is the __WintContainer__, the organization secret **WINTCONTAINER_USERNAME** should be used.

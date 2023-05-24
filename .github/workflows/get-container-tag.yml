@@ -15,16 +15,27 @@ jobs:
       tag: ${{ steps.set_output.outputs.tag }}
 
     steps:
-      - name: Tag Live Container
-        if: github.ref == 'refs/heads/main'
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install GitVersion (v5.x)
+        uses: gittools/actions/gitversion/setup@v0.10.2
+        with:
+          versionSpec: '5.x'
+
+      - name: Run GitVersion
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v0.10.2
+
+      - name: Tag Staging or Production Container
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development'
         run: |
-          echo "TAG=latest" >> $GITHUB_ENV
-      - name: Tag Development Container
-        if: github.ref == 'refs/heads/development'
-        run: |
-          echo "TAG=test" >> $GITHUB_ENV
+          echo "TAG=${{ steps.gitversion.outputs.SemVer }}" >> $GITHUB_ENV
+
       - name: Tag Feature container
-        if: ${{ startsWith(github.ref, 'refs/heads/feature') || startsWith(github.ref, 'refs/heads/bugfix') || startsWith(github.ref, 'refs/heads/dev') || startsWith(github.ref, 'refs/heads/experimental') }}
+        if: ${{ startsWith(github.ref, 'refs/heads/feature') || startsWith(github.ref, 'refs/heads/bugfix') || startsWith(github.ref, 'refs/heads/experimental') }}
         run: |
           echo "TAG=dev.${{ github.sha }}" >> $GITHUB_ENV
 

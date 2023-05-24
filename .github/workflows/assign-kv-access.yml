@@ -1,0 +1,75 @@
+name: assign-kv-access
+on:
+  workflow_call:
+    inputs:
+      principal-id:
+        type: string
+        description: |
+          'The principal ID (system assigned managed identity) of the resource that would be granted access.'
+        required: true
+      environment:
+        description: 'The value that would be used as the enviroment environmet variable value.'
+        required: true
+        type: string
+      keyvault-resourcegroup-staging:
+        type: string
+        description: |
+          'The name of the resource group where the key vault that will be used by the app deployed to production resides.'
+        required: false
+        default: 'WintVaultTest'
+      keyvault-staging:
+        type: string
+        description: |
+          'The name of the key vault that will be used by the app deployed to production.'
+        required: false
+        default: 'WintVaultTest'
+      keyvault-resourcegroup-production:
+        type: string
+        description: |
+          'The name of the resource group where the key vault that will be used by the app deployed to production resides.'
+        required: false
+        default: 'WintVaultLive'
+      keyvault-production:
+        type: string
+        description: |
+          'The name of the key vault that will be used by the app deployed to production.'
+        required: false
+        default: 'WintVaultLive'
+
+    secrets:
+      azure-credentials:
+        description: 'The credentials to use to authenticate against azure.'
+        required: true
+
+jobs:
+  assign_keyvault_access:
+    name: Assign key vault access
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'set production key vault'
+        if: ${{ inputs.environment == 'Production' || inputs.environment == 'production' }}
+        shell: bash
+        run: |
+          echo "VAULT_RG=${{ inputs.keyvault-resourcegroup-production }}" >> $GITHUB_ENV
+          echo "VAULT=${{ inputs.keyvault-production }}" >> $GITHUB_ENV
+
+      - name: 'set staging key vault'
+        if: ${{ inputs.environment == 'Staging' || inputs.environment == 'staging' || inputs.environment == 'Test' || inputs.environment == 'test' }}
+        shell: bash
+        run: |
+          echo "VAULT_RG=${{ inputs.keyvault-resourcegroup-staging }}" >> $GITHUB_ENV
+          echo "VAULT=${{ inputs.keyvault-staging }}" >> $GITHUB_ENV
+
+      - name: 'az login'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.azure-credentials }}
+
+      - name: keyvault-set-policy
+        shell: bash
+        run: |
+          az keyvault set-policy \
+          --name '${{ env.VAULT }}' \
+          --resource-group '${{ env.VAULT_RG }}' \
+          --object-id ${{ inputs.principal-id }} \
+          --secret-permissions get list
