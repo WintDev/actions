@@ -67,4 +67,5 @@ jobs:
           --name '${{ env.VAULT }}' \
           --resource-group '${{ env.VAULT_RG }}' \
           --object-id ${{ inputs.principal-id }} \
-          --secret-permissions get list
+          --secret-permissions get list \
+          --output tsv
