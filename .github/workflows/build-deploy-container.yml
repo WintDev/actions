@@ -183,6 +183,16 @@ jobs:
           --location ${{ inputs.container-app-location }} \
           ${{ env.CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG }}
 
+      - name: Get Resource ID of the Managed Identity
+        id: get_resource_id
+        run: |
+          resource_id=$(az identity show \
+          --name ${{ needs.get_managed_id.outputs.name }} \
+          --resource-group ${{ needs.get_managed_id.outputs.rg }} \
+          --query id \
+          --output tsv)
+          echo "resource_id=$resource_id" >> $GITHUB_OUTPUT
+
       - name: 'Assign managed identity'
         shell: bash
         run: |
@@ -190,4 +200,4 @@ jobs:
           --name ${{ inputs.container-app-name }} \
           --resource-group ${{ inputs.container-app-resource-group }} \
           --user-assigned \
-          ${{ needs.get_managed_id.outputs.resource_id }}
+          ${{ steps.get_resource_id.outputs.resource_id }}

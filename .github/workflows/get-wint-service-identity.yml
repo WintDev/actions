@@ -21,9 +21,12 @@ on:
       principal_id:
         description: The principal ID of the user-assigned managed identity.
         value: ${{ jobs.get_managed_id.outputs.principal_id }}
-      resource_id:
-        description: The resource ID of the user-assigned managed identity.
-        value: ${{ jobs.get_managed_id.outputs.resource_id }}
+      name:
+        description: The name of the user-assigned managed identity.
+        value: ${{ jobs.get_managed_id.outputs.name }}
+      rg:
+        description: The resource group of the user-assigned managed identity.
+        value: ${{ jobs.get_managed_id.outputs.rg }}
 
 jobs:
   get_managed_id:
@@ -33,7 +36,8 @@ jobs:
       RESOURCE_GROUP: ${{ vars.AZURE_IDENTITY_RG }}
     outputs:
       principal_id: ${{ steps.get_principal_id.outputs.principal_id }}
-      resource_id: ${{ steps.get_resource_id.outputs.resource_id }}
+      name: ${{ steps.get_name.outputs.name }}
+      rg: ${{ steps.get_rg.outputs.rg }}
       
     steps:
       - name: 'set staging identity name'
@@ -54,6 +58,7 @@ jobs:
 
       - name: Ensure Managed Identity
         id: create_managed_identity
+        shell: bash
         run: |
           az identity create \
           --name ${{ env.NAME }} \
@@ -62,6 +67,7 @@ jobs:
 
       - name: Get Principal ID of the Managed Identity
         id: get_principal_id
+        shell: bash
         run: |
           principal_id=$(az identity show \
           --name ${{ env.NAME }} \
@@ -70,15 +76,18 @@ jobs:
           --output tsv)
           echo "principal_id=$principal_id" >> $GITHUB_OUTPUT
 
-      - name: Get Resource ID of the Managed Identity
-        id: get_resource_id
+      - name: Get managed identity name
+        id:  get_name
+        shell: bash
         run: |
-          resource_id=$(az identity show \
-          --name ${{ env.NAME }} \
-          --resource-group ${{ env.RESOURCE_GROUP }} \
-          --query id \
-          --output tsv)
-          echo "resource_id=$resource_id" >> $GITHUB_OUTPUT
+          echo "name=${{ env.NAME}}" >> $GITHUB_OUTPUT
+
+      - name: Get managed identity resource group
+        id:  get_rg
+        shell: bash
+        run: |
+          echo "rg=${{ env.RESOURCE_GROUP}}" >> $GITHUB_OUTPUT
+
 
   assign_app_configuration_access:
     name: Assign App Configuration access
