@@ -73,11 +73,11 @@ jobs:
       - name: Get Resource ID of the Managed Identity
         id: get_resource_id
         run: |
-          echo "resource_id=$(az identity show \
+          resource_id=$(az identity show \
           --name ${{ env.NAME }} \
           --resource-group ${{ env.RESOURCE_GROUP }} \
           --query id \
-          --output tsv)"
+          --output tsv)
           echo "resource_id=$resource_id" >> $GITHUB_OUTPUT
 
   assign_app_configuration_access:
