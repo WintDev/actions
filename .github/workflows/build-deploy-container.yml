@@ -126,7 +126,7 @@ jobs:
     uses: WintDev/actions/.github/workflows/get-wint-service-identity.yml@alpha
     name: Get the service identity
     with:
-      enviroment: ${{ inputs.environment }}
+      environment: ${{ inputs.environment }}
     secrets:
       azure-credentials: ${{ secrets.azure-credentials }}
 
