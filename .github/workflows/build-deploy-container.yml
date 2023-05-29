@@ -220,4 +220,4 @@ jobs:
       - name: assign
         shell: bash
         run: |
-          az role assignment create --role Reader --assignee-object-id ${{needs.get_managed_id.outputs.principal_id}} --scope /subscriptions/${{ vars.AZURE_SUBSCRIPTION }}/resourceGroups/wint-identity
+          az role assignment create --role Reader --assignee-object-id ${{needs.get_managed_identity.outputs.principal_id}} --scope /subscriptions/${{ vars.AZURE_SUBSCRIPTION }}/resourceGroups/wint-identity
