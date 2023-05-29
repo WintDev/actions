@@ -207,7 +207,6 @@ jobs:
     uses: WintDev/actions/.github/workflows/get-managed-identity.yml@alpha
     name: Get the system assigned managed identity
     with:
-      environment: ${{ inputs.environment }}
       resource-group: ${{ inputs.container-app-resource-group }}
       container-app-name: ${{ inputs.container-app-name }}
     secrets:
