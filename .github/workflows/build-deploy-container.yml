@@ -122,7 +122,7 @@ jobs:
       tag: latest
     secrets: inherit
 
-  get_managed_id:
+  get_service_identity:
     uses: WintDev/actions/.github/workflows/get-wint-service-identity.yml@alpha
     name: Get the service identity
     with:
@@ -132,7 +132,7 @@ jobs:
 
   deploy:
     name: Deploy azure container app
-    needs: [push_container, get_managed_id]
+    needs: [push_container, get_service_identity]
     runs-on: ubuntu-latest
     env:
       CONTAINER_APP_ENV_VARS: 'ASPNETCORE_ENVIRONMENT=${{ inputs.environment }} DOTNET_ENVIRONMENT=${{ inputs.environment }}'
@@ -187,8 +187,8 @@ jobs:
         id: get_resource_id
         run: |
           resource_id=$(az identity show \
-          --name ${{ needs.get_managed_id.outputs.name }} \
-          --resource-group ${{ needs.get_managed_id.outputs.rg }} \
+          --name ${{ needs.get_service_identity.outputs.name }} \
+          --resource-group ${{ needs.get_service_identity.outputs.rg }} \
           --query id \
           --output tsv)
           echo "resource_id=$resource_id" >> $GITHUB_OUTPUT
@@ -201,3 +201,24 @@ jobs:
           --resource-group ${{ inputs.container-app-resource-group }} \
           --user-assigned \
           ${{ steps.get_resource_id.outputs.resource_id }}
+
+  get_managed_identity:
+    needs: deploy
+    uses: WintDev/actions/.github/workflows/get-managed-identity.yml@alpha
+    name: Get the system assigned managed identity
+    with:
+      environment: ${{ inputs.environment }}
+      resource-group: ${{ inputs.container-app-resource-group }}
+      container-app-name: ${{ inputs.container-app-name }}
+    secrets:
+      azure-credentials: ${{ secrets.azure-credentials }}
+
+  assign-wint-identity-access:
+    name: Assign read access to the wint-identity resource group
+    needs: get_managed_identity
+    runs-on: ubuntu-latest
+    steps:
+      - name: assign
+        shell: bash
+        run: |
+          az role assignment create --role Reader --assignee-object-id ${{needs.get_managed_id.outputs.principal_id}} --scope /subscriptions/${{ vars.AZURE_SUBSCRIPTION }}/resourceGroups/wint-identity
