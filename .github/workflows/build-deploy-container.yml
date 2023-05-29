@@ -217,6 +217,11 @@ jobs:
     needs: get_managed_identity
     runs-on: ubuntu-latest
     steps:
+      - name: 'az login'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.azure-credentials }}
+
       - name: assign
         shell: bash
         run: |
