@@ -138,6 +138,12 @@ jobs:
       CONTAINER_APP_ENV_VARS: 'ASPNETCORE_ENVIRONMENT=${{ inputs.environment }} DOTNET_ENVIRONMENT=${{ inputs.environment }}'
       CONTAINER_APP_ENVIRONMENT: ${{ inputs.container-app-environment }}
     steps:
+      - name: 'Add user assigned managed identity client id to environment variables'
+        shell: bash
+        run: |
+          CONTAINER_APP_ENV_VARS="${{ env.CONTAINER_APP_ENV_VARS }} ${{ WINT_IDENTITY_CLIENTID=needs.get_service_identity.outputs.client_id }}"
+          echo "CONTAINER_APP_ENV_VARS=${CONTAINER_APP_ENV_VARS}" >> $GITHUB_ENV
+          
       - name: 'Set production container app environment'
         if: ${{ inputs.container-app-environment == '' && (inputs.environment == 'Production' || inputs.environment == 'production') }}
         shell: bash
@@ -212,7 +218,7 @@ jobs:
     secrets:
       azure-credentials: ${{ secrets.azure-credentials }}
 
-  assign-wint-identity-access:
+  assign-wint-identity-access:  
     name: Assign read access to the wint-identity resource group
     needs: get_managed_identity
     runs-on: ubuntu-latest
