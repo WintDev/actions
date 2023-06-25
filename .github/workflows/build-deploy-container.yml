@@ -122,6 +122,19 @@ jobs:
       tag: latest
     secrets: inherit
 
+  push_container_dev:
+    name: 'Build and Push dev docker container'
+    if: github.ref == 'refs/heads/development'
+    needs: [set_name]
+    uses: WintDev/actions/.github/workflows/build-push-container.yml@alpha
+    with:
+      login-server: ${{ inputs.login-server }}
+      dockerfile: ${{ inputs.dockerfile }}
+      working-directory: ${{ inputs.working-directory }}
+      container-name: ${{ needs.set_name.outputs.name }}
+      tag: dev
+    secrets: inherit
+
   get_service_identity:
     uses: WintDev/actions/.github/workflows/get-wint-service-identity.yml@alpha
     name: Get the service identity
