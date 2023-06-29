@@ -47,45 +47,6 @@ on:
         description: |
           'A list of environment variable(s) for the container. Space-separated values in 'key=value' format. Use an empty string to clear existing values. Prefix value with 'secretref:' to reference a secret.'
         required: false
-      
-      require-app-config-access:
-        type: boolean
-        description: |
-          'true if the container app requires access to app configuration; otherwise, false. The default value is true.'
-        required: false
-        default: true
-
-      require-keyvault-access:
-        type: boolean
-        description: |
-          'true if the container app requires key vault access; otherwise, false. The default value is true.'
-        required: false
-        default: true
-
-      keyvault-resourcegroup-staging:
-        type: string
-        description: |
-          'The name of the resource group where the key vault that will be used by the app deployed to production resides.'
-        required: false
-        default: 'WintVaultTest'
-      keyvault-staging:
-        type: string
-        description: |
-          'The name of the key vault that will be used by the app deployed to production.'
-        required: false
-        default: 'WintVaultTest'
-      keyvault-resourcegroup-production:
-        type: string
-        description: |
-          'The name of the resource group where the key vault that will be used by the app deployed to production resides.'
-        required: false
-        default: 'WintVaultLive'
-      keyvault-production:
-        type: string
-        description: |
-          'The name of the key vault that will be used by the app deployed to production.'
-        required: false
-        default: 'WintVaultLive'
 
     secrets:
       username:
@@ -161,14 +122,41 @@ jobs:
       tag: latest
     secrets: inherit
 
+  push_container_dev:
+    name: 'Build and Push dev docker container'
+    if: github.ref == 'refs/heads/development'
+    needs: [set_name]
+    uses: WintDev/actions/.github/workflows/build-push-container.yml@main
+    with:
+      login-server: ${{ inputs.login-server }}
+      dockerfile: ${{ inputs.dockerfile }}
+      working-directory: ${{ inputs.working-directory }}
+      container-name: ${{ needs.set_name.outputs.name }}
+      tag: dev
+    secrets: inherit
+
+  get_service_identity:
+    uses: WintDev/actions/.github/workflows/get-wint-service-identity.yml@main
+    name: Get the service identity
+    with:
+      environment: ${{ inputs.environment }}
+    secrets:
+      azure-credentials: ${{ secrets.azure-credentials }}
+
   deploy:
     name: Deploy azure container app
-    needs: push_container
+    needs: [push_container, get_service_identity]
     runs-on: ubuntu-latest
     env:
       CONTAINER_APP_ENV_VARS: 'ASPNETCORE_ENVIRONMENT=${{ inputs.environment }} DOTNET_ENVIRONMENT=${{ inputs.environment }}'
       CONTAINER_APP_ENVIRONMENT: ${{ inputs.container-app-environment }}
     steps:
+      - name: 'Add user assigned managed identity client id to environment variables'
+        shell: bash
+        run: |
+          CONTAINER_APP_ENV_VARS="${{ env.CONTAINER_APP_ENV_VARS }} WINT_IDENTITY_CLIENTID=${{ needs.get_service_identity.outputs.client_id }}"
+          echo "CONTAINER_APP_ENV_VARS=${CONTAINER_APP_ENV_VARS}" >> $GITHUB_ENV
+          
       - name: 'Set production container app environment'
         if: ${{ inputs.container-app-environment == '' && (inputs.environment == 'Production' || inputs.environment == 'production') }}
         shell: bash
@@ -214,37 +202,46 @@ jobs:
           --location ${{ inputs.container-app-location }} \
           ${{ env.CA_GH_ACTION_CONTAINER_APP_ENVIRONMENT_VARIABLES_ARG }}
 
-  get_managed_id:
-    uses: WintDev/actions/.github/workflows/get-managed-identity.yml@main
+      - name: Get Resource ID of the Managed Identity
+        id: get_resource_id
+        run: |
+          resource_id=$(az identity show \
+          --name ${{ needs.get_service_identity.outputs.name }} \
+          --resource-group ${{ needs.get_service_identity.outputs.rg }} \
+          --query id \
+          --output tsv)
+          echo "resource_id=$resource_id" >> $GITHUB_OUTPUT
+
+      - name: 'Assign managed identity'
+        shell: bash
+        run: |
+          az containerapp identity assign \
+          --name ${{ inputs.container-app-name }} \
+          --resource-group ${{ inputs.container-app-resource-group }} \
+          --user-assigned \
+          ${{ steps.get_resource_id.outputs.resource_id }}
+
+  get_managed_identity:
     needs: deploy
-    name: Get the managed identity
+    uses: WintDev/actions/.github/workflows/get-managed-identity.yml@main
+    name: Get the system assigned managed identity
     with:
       resource-group: ${{ inputs.container-app-resource-group }}
       container-app-name: ${{ inputs.container-app-name }}
     secrets:
       azure-credentials: ${{ secrets.azure-credentials }}
 
-  assign_app_configuration_access:
-    name: Assign App Configuration access
-    if: ${{ inputs.require-app-config-access }}
-    needs: get_managed_id
-    uses: WintDev/actions/.github/workflows/assign-app-configuration-access.yml@main
-    with:
-      principal-id: ${{ needs.get_managed_id.outputs.principal_id }}
-    secrets:
-      azure-credentials: ${{ secrets.azure-credentials }}
+  assign-wint-identity-access:  
+    name: Assign read access to the wint-identity resource group
+    needs: get_managed_identity
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'az login'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.azure-credentials }}
 
-  assign_keyvault_access:
-    name: Assign key vault access
-    if: ${{ inputs.require-app-config-access || inputs.require-keyvault-access }}
-    needs: get_managed_id
-    uses: WintDev/actions/.github/workflows/assign-kv-access.yml@main
-    with:
-      principal-id: ${{ needs.get_managed_id.outputs.principal_id }}
-      environment: ${{ inputs.environment }}
-      keyvault-resourcegroup-production: ${{ inputs.keyvault-resourcegroup-production }}
-      keyvault-production: ${{ inputs.keyvault-production }}
-      keyvault-resourcegroup-staging: ${{ inputs.keyvault-resourcegroup-staging }}
-      keyvault-staging: ${{ inputs.keyvault-staging }}
-    secrets: 
-      azure-credentials: ${{ secrets.azure-credentials }}
+      - name: assign
+        shell: bash
+        run: |
+          az role assignment create --role Reader --assignee-object-id ${{needs.get_managed_identity.outputs.principal_id}} --scope /subscriptions/${{ vars.AZURE_SUBSCRIPTION }}/resourceGroups/wint-identity
