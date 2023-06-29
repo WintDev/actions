@@ -1,0 +1,124 @@
+# Returns the user-assigned managed identity (principal ID) that identifies the identity of a service functionality.
+name: Get Wint Service Managed Identity
+
+on:
+  workflow_call:
+    secrets:
+      azure-credentials:
+        description: 'The credentials used to authenticate against azure. Note: requires claims to manage user-assigned managed identity.'
+        required: true
+    inputs:
+      location:
+        description: 'The location of the resource group where the resource is located, e.g. northeurope.'
+        type: string
+        required: false
+        default: northeurope
+      environment:
+        description: 'The environment to deploy to.'
+        required: true
+        type: string
+    outputs:
+      principal_id:
+        description: The principal ID of the user-assigned managed identity.
+        value: ${{ jobs.get_managed_id.outputs.principal_id }}
+      client_id:
+        description: The client ID of the user-assigned managed identity.
+        value: ${{ jobs.get_managed_id.outputs.client_id }}
+      name:
+        description: The name of the user-assigned managed identity.
+        value: ${{ jobs.get_managed_id.outputs.name }}
+      rg:
+        description: The resource group of the user-assigned managed identity.
+        value: ${{ jobs.get_managed_id.outputs.rg }}
+
+jobs:
+  get_managed_id:
+    runs-on: ubuntu-latest
+    env:
+      NAME: wint-service
+      RESOURCE_GROUP: ${{ vars.AZURE_IDENTITY_RG }}
+    outputs:
+      client_id: ${{ steps.get_client_id.outputs.client_id }}
+      principal_id: ${{ steps.get_principal_id.outputs.principal_id }}
+      name: ${{ steps.get_name.outputs.name }}
+      rg: ${{ steps.get_rg.outputs.rg }}
+      
+    steps:
+      - name: 'set staging identity name'
+        if: ${{ inputs.environment == 'Staging' || inputs.environment == 'staging' || inputs.environment == 'Test' || inputs.environment == 'test' }}
+        shell: bash
+        run: |
+          NAME=${{ env.NAME }}-test
+          echo "NAME=$NAME" >> $GITHUB_ENV
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.azure-credentials }}
+
+      - name: 'az config'
+        shell: bash
+        run: az config set extension.use_dynamic_install=yes_without_prompt
+
+      - name: Ensure Managed Identity
+        id: create_managed_identity
+        shell: bash
+        run: |
+          az identity create \
+          --name ${{ env.NAME }} \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --location ${{ inputs.location }}
+
+      - name: Get Principal ID of the Managed Identity
+        id: get_principal_id
+        shell: bash
+        run: |
+          principal_id=$(az identity show \
+          --name ${{ env.NAME }} \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --query principalId \
+          --output tsv)
+          echo "principal_id=$principal_id" >> $GITHUB_OUTPUT
+      
+      - name: Get Client ID of the Managed Identity
+        id: get_client_id
+        shell: bash
+        run: |
+          client_id=$(az identity show \
+          --name ${{ env.NAME }} \
+          --resource-group ${{ env.RESOURCE_GROUP }} \
+          --query clientId \
+          --output tsv)
+          echo "client_id=$client_id" >> $GITHUB_OUTPUT
+
+      - name: Get managed identity name
+        id:  get_name
+        shell: bash
+        run: |
+          echo "name=${{ env.NAME}}" >> $GITHUB_OUTPUT
+
+      - name: Get managed identity resource group
+        id:  get_rg
+        shell: bash
+        run: |
+          echo "rg=${{ env.RESOURCE_GROUP}}" >> $GITHUB_OUTPUT
+
+
+  assign_app_configuration_access:
+    name: Assign App Configuration access
+    needs: get_managed_id
+    uses: WintDev/actions/.github/workflows/assign-app-configuration-access.yml@v5
+    with:
+      principal-id: ${{ needs.get_managed_id.outputs.principal_id }}
+    secrets:
+      azure-credentials: ${{ secrets.azure-credentials }}
+
+  assign_keyvault_access:
+    name: Assign key vault access
+    needs: get_managed_id
+    uses: WintDev/actions/.github/workflows/assign-kv-access.yml@v5
+    with:
+      principal-id: ${{ needs.get_managed_id.outputs.principal_id }}
+      environment: ${{ inputs.environment }}
+    secrets: 
+      azure-credentials: ${{ secrets.azure-credentials }}

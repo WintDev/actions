@@ -4,8 +4,7 @@ on:
     inputs:
       principal-id:
         type: string
-        description: |
-          'The principal ID (system assigned managed identity) of the resource that would be granted access.'
+        description: 'The principal ID (system assigned managed identity) of the resource that would be granted access.'
         required: true
       environment:
         description: 'The value that would be used as the enviroment environmet variable value.'
@@ -13,26 +12,22 @@ on:
         type: string
       keyvault-resourcegroup-staging:
         type: string
-        description: |
-          'The name of the resource group where the key vault that will be used by the app deployed to production resides.'
+        description: 'The name of the resource group where the key vault that will be used by the app deployed to production resides.'
         required: false
         default: 'WintVaultTest'
       keyvault-staging:
         type: string
-        description: |
-          'The name of the key vault that will be used by the app deployed to production.'
+        description: 'The name of the key vault that will be used by the app deployed to production.'
         required: false
         default: 'WintVaultTest'
       keyvault-resourcegroup-production:
         type: string
-        description: |
-          'The name of the resource group where the key vault that will be used by the app deployed to production resides.'
+        description: 'The name of the resource group where the key vault that will be used by the app deployed to production resides.'
         required: false
         default: 'WintVaultLive'
       keyvault-production:
         type: string
-        description: |
-          'The name of the key vault that will be used by the app deployed to production.'
+        description: 'The name of the key vault that will be used by the app deployed to production.'
         required: false
         default: 'WintVaultLive'
 
@@ -72,4 +67,5 @@ jobs:
           --name '${{ env.VAULT }}' \
           --resource-group '${{ env.VAULT_RG }}' \
           --object-id ${{ inputs.principal-id }} \
-          --secret-permissions get list
+          --secret-permissions get list \
+          --output tsv
