@@ -21,25 +21,6 @@ on:
         required: true
 
 jobs:
-  setup_test_sources:
-    name: 'Setup Test Sources'
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-    - name: get_test_sources
-      id: get_test_sources
-      shell: bash
-      run: |
-        if [[ -n "${{ github.event.inputs.test-sources }}" ]]; then
-          echo "Using test-sources as test source"
-          TEST_SOURCES=${{ github.event.inputs.test-sources }}
-        else
-          echo "Using solution-name as test source"
-          TEST_SOURCES=${{ github.event.inputs.solution-name }}
-        fi
-        echo "name=test_sources::$TEST_SOURCES" >> $GITHUB_OUTPUT
-
   test:
     name: Build and Test (${{ inputs.solution-name }})
     runs-on: ubuntu-latest
@@ -49,6 +30,19 @@ jobs:
       WINT_GITHUB_NUGET_SOURCE_URL: 'https://nuget.pkg.github.com/WintDev/index.json'
 
     steps:
+      - name: get_test_sources
+        id: get_test_sources
+        shell: bash
+        run: |
+          if [[ -n "${{ github.event.inputs.test-sources }}" ]]; then
+            echo "Using test-sources as test source"
+            TEST_SOURCES=${{ inputs.test-sources }}
+          else
+            echo "Using solution-name as test source"
+            TEST_SOURCES=${{ inputs.solution-name }}
+          fi
+          echo "name=test_sources::$TEST_SOURCES" >> $GITHUB_OUTPUT
+
       - name: Install dotnet 7
         uses: actions/setup-dotnet@v3
         with:
@@ -65,7 +59,7 @@ jobs:
         run: dotnet restore ${{ inputs.solution-name }}
 
       - name: Build
-        run: dotnet build ${{ inputs.solution-name }} --configuration ${{ env.CONFIGURATION }} --verbosity ${{ github.event.inputs.build-verbosity}} --no-restore
+        run: dotnet build ${{ inputs.solution-name }} --configuration ${{ env.CONFIGURATION }} --verbosity ${{ inputs.build-verbosity }} --no-restore
 
       - name: Test
         #run: dotnet test ${{ inputs.solution-name }} --filter trigger!=manual --configuration ${{ env.CONFIGURATION }} --no-build
@@ -75,4 +69,3 @@ jobs:
           for test_source in "${ADDR[@]}"; do
             dotnet test $test_source --filter trigger!=manual --configuration ${{ env.CONFIGURATION }} --no-build
           done
-
