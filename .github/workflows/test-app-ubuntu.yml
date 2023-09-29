@@ -34,7 +34,7 @@ jobs:
         id: get_test_sources
         shell: bash
         run: |
-          if [[ -n "${{ github.event.inputs.test-sources }}" ]]; then
+          if [[ -n "${{ inputs.test-sources }}" ]]; then
             echo "Using test-sources as test source"
             TEST_SOURCES=${{ inputs.test-sources }}
           else
