@@ -3,8 +3,16 @@ on:
   workflow_call:
     inputs:
       solution-name:
-        description: 'The name of the solution to build and test.'
+        description: 'The name of the solution to build.'
         required: true
+        type: string
+      test-sources:
+        description: 'The comma-separated list of path/testassembly to run as test(s). If not specified, the param solution-name is used as the source of a single test.'
+        required: false
+        type: string
+      build-verbosity:
+        required: false
+        default: 'minimal'
         type: string
 
     secrets:
@@ -13,11 +21,29 @@ on:
         required: true
 
 jobs:
-  build:
+  setup_test_sources:
+    name: 'Setup Test Sources'
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+    - name: get_test_sources
+      id: get_test_sources
+      shell: bash
+      run: |
+        if [[ -n "${{ github.event.inputs.test-sources }}" ]]; then
+          echo "Using test-sources as test source"
+          TEST_SOURCES=${{ github.event.inputs.test-sources }}
+        else
+          echo "Using solution-name as test source"
+          TEST_SOURCES=${{ github.event.inputs.solution-name }}
+        fi
+        echo "name=test_sources::$TEST_SOURCES" >> $GITHUB_OUTPUT
+
+  test:
     name: Build and Test (${{ inputs.solution-name }})
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
+    continue-on-error: false
     env:
       CONFIGURATION: release
       WINT_GITHUB_NUGET_SOURCE_URL: 'https://nuget.pkg.github.com/WintDev/index.json'
@@ -39,7 +65,14 @@ jobs:
         run: dotnet restore ${{ inputs.solution-name }}
 
       - name: Build
-        run: dotnet build ${{ inputs.solution-name }} --configuration ${{ env.CONFIGURATION }} --no-restore
+        run: dotnet build ${{ inputs.solution-name }} --configuration ${{ env.CONFIGURATION }} --verbosity ${{ github.event.inputs.build-verbosity}} --no-restore
 
       - name: Test
-        run: dotnet test ${{ inputs.solution-name }} --filter trigger!=manual --configuration ${{ env.CONFIGURATION }} --no-build
+        #run: dotnet test ${{ inputs.solution-name }} --filter trigger!=manual --configuration ${{ env.CONFIGURATION }} --no-build
+        shell: bash
+        run: |
+          IFS=',' read -ra ADDR <<< "${{ steps.get_test_sources.outputs.test_sources }}"
+          for test_source in "${ADDR[@]}"; do
+            dotnet test $test_source --filter trigger!=manual --configuration ${{ env.CONFIGURATION }} --no-build
+          done
+
