@@ -66,6 +66,20 @@ jobs:
       - name: Build
         run: dotnet build ${{ inputs.solution-name }} --configuration ${{ env.CONFIGURATION }} --verbosity ${{ inputs.build-verbosity }} --property WarningLevel=0 /clp:ErrorsOnly --no-restore
 
+      - name: List_Tests
+        #run: dotnet test ${{ inputs.solution-name }} --filter trigger!=manual --configuration ${{ env.CONFIGURATION }} --no-build
+        shell: bash
+        run: |
+          IFS=',' read -ra ADDR <<< "${{ steps.get_test_sources.outputs.test_sources }}"
+          for test_source in "${ADDR[@]}"; do
+            if [[ -f "$test_source" ]]
+            then
+              dotnet test "$test_source" --filter trigger!=manual --configuration ${{ env.CONFIGURATION }} --no-build --list-tests
+            else
+              echo "Test source '$test_source' does not exist"
+            fi
+          done
+
       - name: Test
         #run: dotnet test ${{ inputs.solution-name }} --filter trigger!=manual --configuration ${{ env.CONFIGURATION }} --no-build
         shell: bash
@@ -74,7 +88,7 @@ jobs:
           for test_source in "${ADDR[@]}"; do
             if [[ -f "$test_source" ]]
             then
-              dotnet test "$test_source" --filter trigger!=manual --configuration ${{ env.CONFIGURATION }}
+              dotnet test "$test_source" --filter trigger!=manual --configuration ${{ env.CONFIGURATION }} --no-build
             else
               echo "Test source '$test_source' does not exist"
             fi
