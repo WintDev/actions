@@ -68,5 +68,5 @@ jobs:
         run: |
           IFS=',' read -ra ADDR <<< "${{ steps.get_test_sources.outputs.test_sources }}"
           for test_source in "${ADDR[@]}"; do
-            dotnet test $test_source --filter trigger!=manual --configuration ${{ env.CONFIGURATION }} --no-build
+            dotnet test "$test_source" --filter trigger!=manual --configuration ${{ env.CONFIGURATION }} --no-build
           done
