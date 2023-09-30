@@ -42,7 +42,7 @@ jobs:
             echo "Using solution-name as test source"
             TEST_SOURCES=${{ inputs.solution-name }}
           fi
-          echo "name=test_sources::$TEST_SOURCES" >> $GITHUB_OUTPUT
+          echo "test_sources=$TEST_SOURCES" >> $GITHUB_OUTPUT
 
       - name: Install dotnet 7
         uses: actions/setup-dotnet@v3
