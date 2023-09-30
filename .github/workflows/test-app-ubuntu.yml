@@ -74,7 +74,7 @@ jobs:
           for test_source in "${ADDR[@]}"; do
             if [[ -f "$test_source" ]]
             then
-              dotnet test "$test_source" --filter trigger!=manual --configuration ${{ env.CONFIGURATION }} --no-build
+              dotnet test "$test_source" --filter trigger!=manual --configuration ${{ env.CONFIGURATION }}
             else
               echo "Test source '$test_source' does not exist"
             fi
