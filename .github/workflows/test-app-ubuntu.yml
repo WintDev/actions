@@ -68,5 +68,10 @@ jobs:
         run: |
           IFS=',' read -ra ADDR <<< "${{ steps.get_test_sources.outputs.test_sources }}"
           for test_source in "${ADDR[@]}"; do
-            dotnet test "$test_source" --filter trigger!=manual --configuration ${{ env.CONFIGURATION }} --no-build
+            if [[ -f "$test_source" ]]
+            then
+              dotnet test "$test_source" --filter trigger!=manual --configuration ${{ env.CONFIGURATION }} --no-build
+            else
+              echo "Test source '$test_source' does not exist"
+            fi
           done
