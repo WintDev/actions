@@ -22,12 +22,12 @@ on:
         type: string
       build-verbosity:
         required: false
-        default: 'minimal'
+        default: 'quiet'
         type: string
       test-verbosity:
         description: 'The verbosity of the test console logger. If not specified, the default value minimal is used.'
         required: false
-        default: 'minimal'
+        default: 'quiet'
         type: string
       dotnet-version:
         required: false
