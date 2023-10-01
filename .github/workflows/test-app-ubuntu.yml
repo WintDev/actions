@@ -74,4 +74,4 @@ jobs:
         #run: dotnet test ${{ inputs.solution-name }} --filter trigger!=manual --configuration ${{ env.CONFIGURATION }} --no-build
         shell: bash
         run: |
-          dotnet test ${{ inputs.solution-name }} --filter ${{ inputs.test-filter }} --configuration ${{ env.CONFIGURATION }} --no-build
+          dotnet test ${{ inputs.solution-name }} --filter "${{ inputs.test-filter }}" --configuration ${{ env.CONFIGURATION }} --no-build
