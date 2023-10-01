@@ -10,7 +10,22 @@ on:
         description: 'The comma-separated list of path/testassembly to run as test(s). If not specified, the param solution-name is used as the source of a single test.'
         required: false
         type: string
+      warning-level:
+        description: 'The warning level of the restore and build actions. If not specified, the default value 0, indicating that no warning messages are displayed, is used.'
+        required: false
+        default: '0'
+        type: string
+      console-logger-parameters:
+        description: 'The parameters passed to the console logger in restore and build commands. If not specified, the default value ErrorsOnly is used.'
+        required: false
+        default: 'ErrorsOnly'
+        type: string
       build-verbosity:
+        required: false
+        default: 'minimal'
+        type: string
+      test-verbosity:
+        description: 'The verbosity of the test console logger. If not specified, the default value minimal is used.'
         required: false
         default: 'minimal'
         type: string
@@ -65,13 +80,13 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Restore
-        run: dotnet restore ${{ inputs.solution-name }}
+        run: dotnet restore ${{ inputs.solution-name }} --verbosity ${{ inputs.build-verbosity }} --property WarningLevel=${{ inputs.warning-level }} /clp:${{ inputs.console-logger-parameters }}
 
       - name: Build
-        run: dotnet build ${{ inputs.solution-name }} --configuration ${{ env.CONFIGURATION }} --verbosity ${{ inputs.build-verbosity }} --property WarningLevel=0 /clp:ErrorsOnly --no-restore
+        run: dotnet build ${{ inputs.solution-name }} --configuration ${{ env.CONFIGURATION }} --verbosity ${{ inputs.build-verbosity }} --property WarningLevel=${{ inputs.warning-level }} /clp:${{ inputs.console-logger-parameters }} --no-restore
 
       - name: Test
         #run: dotnet test ${{ inputs.solution-name }} --filter trigger!=manual --configuration ${{ env.CONFIGURATION }} --no-build
         shell: bash
         run: |
-          dotnet test ${{ inputs.solution-name }} --filter "${{ inputs.test-filter }}" --configuration ${{ env.CONFIGURATION }} --logger:"console;verbosity=minimal;consoleLoggerParameters=ErrorsOnly" --no-build
+          dotnet test ${{ inputs.solution-name }} --filter "${{ inputs.test-filter }}" --configuration ${{ env.CONFIGURATION }} --logger:"console;verbosity=${{ inputs.test-verbosity }};consoleLoggerParameters=${{ inputs.console-logger-parameters }}" --no-build
