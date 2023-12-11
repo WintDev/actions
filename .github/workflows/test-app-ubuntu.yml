@@ -25,13 +25,19 @@ on:
         default: 'quiet'
         type: string
       test-verbosity:
-        description: 'The verbosity of the test console logger. If not specified, the default value minimal is used.'
+        description: 'The verbosity of the test console logger. If not specified, the default value quiet is used.'
         required: false
         default: 'quiet'
         type: string
       dotnet-version:
+        description: 'The main version of .net to install. The default value is 8.'
         required: false
-        default: '6'
+        default: '8'
+        type: string
+      enable-integration-tests:
+        description: 'true to run tests marked as integration tests; otherwise, false. The default value is false.'
+        required: false
+        default: 'false'
         type: string
       test-filter:
         required: false
@@ -42,6 +48,9 @@ on:
       nuget-read-pat:
         description: 'The Personal Access Token used to access the WintDev internal nuget feed when restoring.'
         required: true
+      azure-credentials:
+        description: 'The credentials used to authenticate against azure. Note: requires claims to manage user-assigned managed identity.'
+        required: false
 
 jobs:
   test:
@@ -81,6 +90,22 @@ jobs:
         with:
           show-progress: false
 
+      - name: Setup Integration test environment
+        if: ${{ inputs.enable-integration-tests == 'true' }} 
+        run: |
+          echo "WINT_INTEGRATION_TEST_ENVIRONMENT=1" >> $GITHUB_ENV
+
+      - name: azure-credentials-to-env
+        shell: bash
+        run: |
+          echo "AZURE-CREDENTIALS=${{ secrets.azure-credentials }}" >> $GITHUB_ENV
+
+      - name: 'az login'
+        if: ${{ env.AZURE-CREDENTIALS }} != ''
+        uses: azure/login@v1
+        with:
+          creds: ${{ env.AZURE-CREDENTIALS }}
+
       - name: Restore
         run: dotnet restore ${{ inputs.solution-name }} --verbosity ${{ inputs.build-verbosity }} --property WarningLevel=${{ inputs.warning-level }} /clp:${{ inputs.console-logger-parameters }}
 
@@ -88,7 +113,6 @@ jobs:
         run: dotnet build ${{ inputs.solution-name }} --configuration ${{ env.CONFIGURATION }} --verbosity ${{ inputs.build-verbosity }} --property WarningLevel=${{ inputs.warning-level }} /clp:${{ inputs.console-logger-parameters }} --no-restore
 
       - name: Test
-        #run: dotnet test ${{ inputs.solution-name }} --filter trigger!=manual --configuration ${{ env.CONFIGURATION }} --no-build
         shell: bash
         run: |
           dotnet test ${{ inputs.solution-name }} --filter "${{ inputs.test-filter }}" --configuration ${{ env.CONFIGURATION }} --logger:"console;verbosity=${{ inputs.test-verbosity }};consoleLoggerParameters=${{ inputs.console-logger-parameters }}" --no-build
