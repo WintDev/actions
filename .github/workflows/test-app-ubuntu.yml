@@ -103,7 +103,7 @@ jobs:
         if: ${{ env.AZURE-CREDENTIALS != '' }}
         uses: azure/login@v1
         with:
-          creds: ${{ env.AZURE-CREDENTIALS }}
+          creds: ${{ secrets.azure-credentials }}
 
       - name: Restore
         run: dotnet restore ${{ inputs.solution-name }} --verbosity ${{ inputs.build-verbosity }} --property WarningLevel=${{ inputs.warning-level }} /clp:${{ inputs.console-logger-parameters }}
