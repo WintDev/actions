@@ -60,6 +60,8 @@ jobs:
     env:
       CONFIGURATION: release
       WINT_GITHUB_NUGET_SOURCE_URL: 'https://nuget.pkg.github.com/WintDev/index.json'
+      COVERAGE_REPORT_PATH: 'coverage-report'
+      COVERAGE_REPORT_ARTIFACT: 'coverage-report'
 
     steps:
       - name: get_test_sources
@@ -82,8 +84,13 @@ jobs:
           dotnet-version: |
             ${{ inputs.dotnet-version }}.0.x
 
+      - name: Install dotnet-reportgenerator
+        run: |
+          dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0
+
       - name: Add GitHub Nuget registry
-        run: dotnet nuget add source --username WintDev --password ${{ secrets.nuget-read-pat }} --store-password-in-clear-text --name WintDev "${{ env.WINT_GITHUB_NUGET_SOURCE_URL }}"
+        run: |
+          dotnet nuget add source --username WintDev --password ${{ secrets.nuget-read-pat }} --store-password-in-clear-text --name WintDev "${{ env.WINT_GITHUB_NUGET_SOURCE_URL }}"
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -114,4 +121,15 @@ jobs:
       - name: Test
         shell: bash
         run: |
-          dotnet test ${{ inputs.solution-name }} --filter "${{ inputs.test-filter }}" --configuration ${{ env.CONFIGURATION }} --logger:"console;verbosity=${{ inputs.test-verbosity }};consoleLoggerParameters=${{ inputs.console-logger-parameters }}" --no-build
+          dotnet test ${{ inputs.solution-name }} --filter "${{ inputs.test-filter }}" --configuration ${{ env.CONFIGURATION }} --logger:"console;verbosity=${{ inputs.test-verbosity }};consoleLoggerParameters=${{ inputs.console-logger-parameters }}" --collect:"XPlat Code Coverage" --no-build
+
+      - name: Create Coverage Report
+        shell: bash
+        run: |
+          reportgenerator -reports:**/*.cobertura.xml -targetdir:${{ env.COVERAGE_REPORT_PATH }}
+
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.COVERAGE_REPORT_ARTIFACT }}
+          path: ${{ env.COVERAGE_REPORT_PATH }}
