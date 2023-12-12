@@ -41,7 +41,7 @@ on:
         type: string
       test-filter:
         required: false
-        default: 'trigger!=manual&FullyQualifiedName~UnitTests'
+        default: 'trigger!=manual'
         type: string
 
     secrets:
