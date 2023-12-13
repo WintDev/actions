@@ -128,16 +128,10 @@ jobs:
         run: |
           dotnet test ${{ inputs.solution-name }} --filter "${{ inputs.test-filter }}" --configuration ${{ env.CONFIGURATION }} --logger:"console;verbosity=${{ inputs.test-verbosity }};consoleLoggerParameters=${{ inputs.console-logger-parameters }}" --collect:"XPlat Code Coverage" --no-build
 
-      - name: Create Coverage Report
-        if: ${{ inputs.coverage-report-retention-days >= 1 }}
-        shell: bash
-        run: |
-          reportgenerator -reports:**/*.cobertura.xml -targetdir:${{ env.COVERAGE_REPORT_PATH }}
-
-      - name: Upload Coverage Report
+      - name: Upload Coverage Artifacts
         if: ${{ inputs.coverage-report-retention-days >= 1 }}
         uses: actions/upload-artifact@v2
         with:
           name: ${{ env.COVERAGE_REPORT_ARTIFACT }}
-          path: ${{ env.COVERAGE_REPORT_PATH }}
+          path: '**/*.cobertura.xml'
           retention-days: ${{ inputs.coverage-report-retention-days }}
