@@ -3,43 +3,135 @@ on:
   workflow_call:
     inputs:
       solution-name:
-        description: 'The name of the solution to build and test.'
+        description: 'The name of the solution to build.'
         required: true
         type: string
+      test-sources:
+        description: 'The comma-separated list of path/testassembly to run as test(s). If not specified, the param solution-name is used as the source of a single test.'
+        required: false
+        type: string
+      warning-level:
+        description: 'The warning level of the restore and build actions. If not specified, the default value 0, indicating that no warning messages are displayed, is used.'
+        required: false
+        default: '0'
+        type: string
+      console-logger-parameters:
+        description: 'The parameters passed to the console logger in restore and build commands. If not specified, the default value ErrorsOnly is used.'
+        required: false
+        default: 'ErrorsOnly'
+        type: string
+      build-verbosity:
+        required: false
+        default: 'quiet'
+        type: string
+      test-verbosity:
+        description: 'The verbosity of the test console logger. If not specified, the default value quiet is used.'
+        required: false
+        default: 'quiet'
+        type: string
+      dotnet-version:
+        description: 'The main version of .net to install. The default value is 8.'
+        required: false
+        default: '8'
+        type: string
+      integration-test-environment:
+        description: '1 to run tests marked as integration tests; otherwise, 0. The default value is 0.'
+        required: false
+        default: '0'
+        type: string
+      test-filter:
+        required: false
+        default: 'trigger!=manual'
+        type: string
+      coverage-report-retention-days:
+        description: 'The number of days to retain the code coverage report artifact named coverage-report. If a number less than 1 is specified, no code coverage report artifact is created. The default value is 1 day(s).'
+        required: false
+        default: 1
+        type: number
 
     secrets:
       nuget-read-pat:
         description: 'The Personal Access Token used to access the WintDev internal nuget feed when restoring.'
         required: true
+      azure-credentials:
+        description: 'The credentials used to authenticate against azure. Note: requires claims to manage user-assigned managed identity.'
+        required: false
 
 jobs:
-  build:
+  test:
     name: Build and Test (${{ inputs.solution-name }})
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
+    continue-on-error: false
     env:
       CONFIGURATION: release
       WINT_GITHUB_NUGET_SOURCE_URL: 'https://nuget.pkg.github.com/WintDev/index.json'
+      COVERAGE_REPORT_PATH: 'coverage-report'
+      COVERAGE_REPORT_ARTIFACT: 'coverage-report'
 
     steps:
-      - name: Install dotnet 7
+      - name: get_test_sources
+        id: get_test_sources
+        shell: bash
+        run: |
+          if [[ "${{ inputs.test-sources }}" != ""}} ]]
+          then
+            echo "Using test-sources as test source"
+            TEST_SOURCES=${{ inputs.test-sources }}
+          else
+            echo "Using solution-name as test source"
+            TEST_SOURCES=${{ inputs.solution-name }}
+          fi
+          echo "test_sources=$TEST_SOURCES" >> $GITHUB_OUTPUT
+
+      - name: Install dotnet
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: |
-            7.0.x
+            ${{ inputs.dotnet-version }}.0.x
+
+      - name: Install dotnet-reportgenerator
+        run: |
+          dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0
 
       - name: Add GitHub Nuget registry
-        run: dotnet nuget add source --username WintDev --password ${{ secrets.nuget-read-pat }} --store-password-in-clear-text --name WintDev "${{ env.WINT_GITHUB_NUGET_SOURCE_URL }}"
+        run: |
+          dotnet nuget add source --username WintDev --password ${{ secrets.nuget-read-pat }} --store-password-in-clear-text --name WintDev "${{ env.WINT_GITHUB_NUGET_SOURCE_URL }}"
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          show-progress: false
+
+      - name: Setup Integration test environment
+        run: |
+          echo "WINT_INTEGRATION_TEST_ENVIRONMENT=${{ inputs.integration-test-environment }}" >> $GITHUB_ENV
+
+      - name: azure-credentials-to-env
+        shell: bash
+        run: |
+          echo "AZURE-CREDENTIALS=${{ secrets.azure-credentials }}" >> $GITHUB_ENV
+
+      - name: 'az login'
+        if: ${{ env.AZURE-CREDENTIALS != '' }}
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.azure-credentials }}
 
       - name: Restore
-        run: dotnet restore ${{ inputs.solution-name }}
+        run: dotnet restore ${{ inputs.solution-name }} --verbosity ${{ inputs.build-verbosity }} --property WarningLevel=${{ inputs.warning-level }} /clp:${{ inputs.console-logger-parameters }}
 
       - name: Build
-        run: dotnet build ${{ inputs.solution-name }} --configuration ${{ env.CONFIGURATION }} --no-restore
+        run: dotnet build ${{ inputs.solution-name }} --configuration ${{ env.CONFIGURATION }} --verbosity ${{ inputs.build-verbosity }} --property WarningLevel=${{ inputs.warning-level }} /clp:${{ inputs.console-logger-parameters }} --no-restore
 
       - name: Test
-        run: dotnet test ${{ inputs.solution-name }} --filter trigger!=manual --configuration ${{ env.CONFIGURATION }} --no-build
+        shell: bash
+        run: |
+          dotnet test ${{ inputs.solution-name }} --filter "${{ inputs.test-filter }}" --configuration ${{ env.CONFIGURATION }} --logger:"console;verbosity=${{ inputs.test-verbosity }};consoleLoggerParameters=${{ inputs.console-logger-parameters }}" --collect:"XPlat Code Coverage" --no-build
+
+      - name: Upload Coverage Artifacts
+        if: ${{ inputs.coverage-report-retention-days >= 1 }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.COVERAGE_REPORT_ARTIFACT }}
+          path: '**/*.cobertura.xml'
+          retention-days: ${{ inputs.coverage-report-retention-days }}
