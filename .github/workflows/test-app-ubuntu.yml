@@ -67,22 +67,11 @@ jobs:
       restore-keys: |
         ${{ runner.os }}-nuget-
 
-  restore_nuget_cache:
-    name: Cache nuget restore artifacts
-    uses: actions/cache@v3
-    with:
-      path: ~/.nuget/packages
-      key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
-      restore-keys: |
-        ${{ runner.os }}-nuget-
 
   test:
     name: Build and Test (${{ inputs.solution-name }})
     runs-on: ubuntu-latest
     continue-on-error: false
-    outputs:
-      head_branch: ${{ steps.get_head_branch_name.outputs.head_branch }}
-
     outputs:
       head_branch: ${{ steps.get_head_branch_name.outputs.head_branch }}
 
