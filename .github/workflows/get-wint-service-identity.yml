@@ -107,7 +107,7 @@ jobs:
   assign_app_configuration_access:
     name: Assign App Configuration access
     needs: get_managed_id
-    uses: WintDev/actions/.github/workflows/assign-app-configuration-access.yml@alpha
+    uses: WintDev/actions/.github/workflows/assign-app-configuration-access.yml@experimental
     with:
       principal-id: ${{ needs.get_managed_id.outputs.principal_id }}
     secrets:
@@ -116,7 +116,7 @@ jobs:
   assign_keyvault_access:
     name: Assign key vault access
     needs: get_managed_id
-    uses: WintDev/actions/.github/workflows/assign-kv-access.yml@alpha
+    uses: WintDev/actions/.github/workflows/assign-kv-access.yml@experimental
     with:
       principal-id: ${{ needs.get_managed_id.outputs.principal_id }}
       environment: ${{ inputs.environment }}
