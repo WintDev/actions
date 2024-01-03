@@ -65,7 +65,7 @@ on:
 jobs:
   get_tag:
     name: 'Calculate container tag'
-    uses: WintDev/actions/.github/workflows/get-container-tag.yml@alpha
+    uses: WintDev/actions/.github/workflows/get-container-tag.yml@experimental
 
   set_tag:
     name: 'Set container tag'
@@ -82,7 +82,7 @@ jobs:
 
   get_name:
     name: 'Calculate container name'  
-    uses: WintDev/actions/.github/workflows/get-container-name.yml@alpha
+    uses: WintDev/actions/.github/workflows/get-container-name.yml@experimental
 
   set_name:
     name: 'Set container name'
@@ -100,7 +100,7 @@ jobs:
   push_container:
     name: 'Build and Push docker container'
     needs: [set_tag, set_name]
-    uses: WintDev/actions/.github/workflows/build-push-container.yml@alpha
+    uses: WintDev/actions/.github/workflows/build-push-container.yml@experimental
     with:
       login-server: ${{ inputs.login-server }}
       dockerfile: ${{ inputs.dockerfile }}
@@ -113,7 +113,7 @@ jobs:
     name: 'Build and Push latest docker container'
     if: github.ref == 'refs/heads/main'
     needs: [set_name]
-    uses: WintDev/actions/.github/workflows/build-push-container.yml@alpha
+    uses: WintDev/actions/.github/workflows/build-push-container.yml@experimental
     with:
       login-server: ${{ inputs.login-server }}
       dockerfile: ${{ inputs.dockerfile }}
@@ -126,7 +126,7 @@ jobs:
     name: 'Build and Push dev docker container'
     if: github.ref == 'refs/heads/development'
     needs: [set_name]
-    uses: WintDev/actions/.github/workflows/build-push-container.yml@alpha
+    uses: WintDev/actions/.github/workflows/build-push-container.yml@experimental
     with:
       login-server: ${{ inputs.login-server }}
       dockerfile: ${{ inputs.dockerfile }}
@@ -136,7 +136,7 @@ jobs:
     secrets: inherit
 
   get_service_identity:
-    uses: WintDev/actions/.github/workflows/get-wint-service-identity.yml@alpha
+    uses: WintDev/actions/.github/workflows/get-wint-service-identity.yml@experimental
     name: Get the service identity
     with:
       environment: ${{ inputs.environment }}
@@ -223,7 +223,7 @@ jobs:
 
   get_managed_identity:
     needs: deploy
-    uses: WintDev/actions/.github/workflows/get-managed-identity.yml@alpha
+    uses: WintDev/actions/.github/workflows/get-managed-identity.yml@experimental
     name: Get the system assigned managed identity
     with:
       resource-group: ${{ inputs.container-app-resource-group }}
