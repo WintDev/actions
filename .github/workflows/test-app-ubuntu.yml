@@ -141,7 +141,7 @@ jobs:
           --configuration ${{ env.CONFIGURATION }} \
           --logger:"console;verbosity=${{ inputs.test-verbosity }};consoleLoggerParameters=${{ inputs.console-logger-parameters }}" \
           --collect:"XPlat Code Coverage" \
-          /p:ExcludeByAttribute="GeneratedCodeAttribute"
+          /p:ExcludeByAttribute="GeneratedCodeAttribute" \
           --no-build
 
       - name: Upload Coverage Artifacts
