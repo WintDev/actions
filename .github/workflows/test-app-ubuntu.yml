@@ -102,17 +102,6 @@ jobs:
         run: |
           echo "WINT_INTEGRATION_TEST_ENVIRONMENT=${{ inputs.integration-test-environment }}" >> $GITHUB_ENV
 
-      - name: azure-credentials-to-env
-        shell: bash
-        run: |
-          echo "AZURE-CREDENTIALS=${{ secrets.azure-credentials }}" >> $GITHUB_ENV
-
-      - name: 'az login'
-        if: ${{ env.AZURE-CREDENTIALS != '' }}
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.azure-credentials }}
-
       - name: Get nuget cache key suffix
         id: get_cache_key
         shell: bash
@@ -127,7 +116,7 @@ jobs:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ steps.get_cache_key.outputs.hash }}
           restore-keys: |
-            ${{ runner.os }}-nuget-          
+            ${{ runner.os }}-nuget-
 
       - name: Restore
         run: dotnet restore ${{ inputs.solution-name }} --verbosity ${{ inputs.build-verbosity }} --property WarningLevel=${{ inputs.warning-level }} /clp:${{ inputs.console-logger-parameters }}
