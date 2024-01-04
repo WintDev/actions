@@ -29,9 +29,25 @@ jobs:
 
       - name: Add GitHub Nuget registry
         run: dotnet nuget add source --username WintDev --password ${{ secrets.nuget-read-pat }} --store-password-in-clear-text --name WintDev "${{ env.WINT_GITHUB_NUGET_SOURCE_URL }}"
-
+        
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Get nuget cache key suffix
+        id: get_cache_key
+        shell: bash
+        run: |
+          HASH=${{ hashFiles('**/packages.lock.json') }}
+          echo "hash=$HASH" >> $GITHUB_OUTPUT
+  
+      - name: Cache nuget restore artifacts
+        if: ${{ steps.get_cache_key.outputs.hash != '' }} 
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ steps.get_cache_key.outputs.hash }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-        
 
       - name: Restore
         run: dotnet restore ${{ inputs.solution-name }}
