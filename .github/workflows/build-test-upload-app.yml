@@ -61,7 +61,7 @@ jobs:
         uses: gittools/actions/gitversion/execute@v0.10.2
 
       - name: Restore
-        run: dotnet restore ${{ inputs.solution-name }}
+        run: dotnet restore ${{ inputs.solution-name }} --locked-mode
 
       - name: Build
         run: |
