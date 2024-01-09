@@ -39,6 +39,11 @@ on:
         required: false
         default: '0'
         type: string
+      env-vars:
+        description: A list of environment variable(s) for the container. Space-separated values in 'key=value' format. Use an empty string to clear existing values. Prefix value with 'secretref:' to reference a secret.
+        required: false
+        default: ''
+        type: string
       test-filter:
         required: false
         default: 'trigger!=manual'
@@ -85,6 +90,15 @@ jobs:
             TEST_SOURCES=${{ inputs.solution-name }}
           fi
           echo "test_sources=$TEST_SOURCES" >> $GITHUB_OUTPUT
+
+      - name: set_environment_variables
+        run: |
+          IFS=' ' read -ra ADDR <<< "${{ inputs.env-vars }}"
+          for i in "${ADDR[@]}"; do
+            key=$(echo $i | cut -f1 -d=)
+            value=$(echo $i | cut -f2 -d=)
+            echo "$key=$value" >> $GITHUB_ENV
+          done
 
       - name: Install dotnet
         uses: actions/setup-dotnet@v3
