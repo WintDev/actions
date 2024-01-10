@@ -1,0 +1,39 @@
+name: assign-kv-access
+on:
+  workflow_call:
+    inputs:
+      value:
+        type: string
+        description: 'The string to encrypt.'
+        required: true
+      key:
+        description: 'The cryptographic key used when encrypting the value.'
+        required: true
+        type: string
+      cipher:
+        type: string
+        description: 'The name of the resource group where the key vault that will be used by the app deployed to production resides.'
+        required: false
+        default: aes-256-cbc
+      key-derivation:
+        description: 'The key derivation algorithm to use. The default value is PBKDF2 (Password-Based Key Derivation Function 2).'
+        required: false
+        default: pbkdf2
+        type: string
+    outputs:
+      encrypted-value:
+        description: 'The encrypted value.'
+        value: ${{ jobs.encrypt.outputs.encrypted-value }}
+
+jobs:
+  encrypt:
+    runs-on: ubuntu-latest
+    name: encrypt
+    steps:
+      - id: process
+        shell: bash
+        run: |
+          ENCRYPTED_VALUE=$(echo -n "${{ inputs.value }}" | openssl enc -${{cipher}} -${{ inputs.key-derivation }} -salt -k "${{ inputs.key }}")
+          echo "encrypted-value=$ENCRYPTED_VALUE" >> $GITHUB_OUTPUT
+    outputs:
+      encrypted-value: ${{ steps.process.outputs.encrypted-value }}
