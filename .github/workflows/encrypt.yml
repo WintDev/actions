@@ -34,7 +34,7 @@ jobs:
         shell: bash
         run: |
           ENCRYPTED_VALUE=$(echo -n "${{ inputs.value }}" | openssl enc -${{ inputs.cipher }} -${{ inputs.key-derivation }} -salt -k "${{ secrets.key }}")
-          ENCRYPED_VALUE_BASE64=$(echo -n "$ENCRYPTED_VALUE") | base64
+          ENCRYPED_VALUE_BASE64=$(echo -n "$ENCRYPTED_VALUE" | base64)
           echo "encrypted-value=$ENCRYPED_VALUE_BASE64" >> $GITHUB_OUTPUT
     outputs:
       encrypted-value: ${{ steps.process.outputs.encrypted-value }}
