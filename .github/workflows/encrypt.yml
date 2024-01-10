@@ -6,10 +6,6 @@ on:
         type: string
         description: 'The string to encrypt.'
         required: true
-      key:
-        description: 'The cryptographic key used when encrypting the value.'
-        required: true
-        type: string
       cipher:
         type: string
         description: 'The name of the resource group where the key vault that will be used by the app deployed to production resides.'
@@ -20,6 +16,10 @@ on:
         required: false
         default: pbkdf2
         type: string
+    secrets:
+      key:
+        description: 'The cryptographic key used when encrypting the value.'
+        required: true
     outputs:
       encrypted-value:
         description: 'The encrypted value.'
@@ -33,7 +33,7 @@ jobs:
       - id: process
         shell: bash
         run: |
-          ENCRYPTED_VALUE=$(echo -n "${{ inputs.value }}" | openssl enc -${{ inputs.cipher }} -${{ inputs.key-derivation }} -salt -k "${{ inputs.key }}")
+          ENCRYPTED_VALUE=$(echo -n "${{ inputs.value }}" | openssl enc -${{ inputs.cipher }} -${{ inputs.key-derivation }} -salt -k "${{ secrets.key }}")
           echo "encrypted-value=$ENCRYPTED_VALUE" >> $GITHUB_OUTPUT
     outputs:
       encrypted-value: ${{ steps.process.outputs.encrypted-value }}
