@@ -33,7 +33,7 @@ jobs:
       - id: process
         shell: bash
         run: |
-          ENCRYPTED_VALUE=$(echo -n "${{ inputs.value }}" | openssl enc -${{cipher}} -${{ inputs.key-derivation }} -salt -k "${{ inputs.key }}")
+          ENCRYPTED_VALUE=$(echo -n "${{ inputs.value }}" | openssl enc -${{ inputs.cipher }} -${{ inputs.key-derivation }} -salt -k "${{ inputs.key }}")
           echo "encrypted-value=$ENCRYPTED_VALUE" >> $GITHUB_OUTPUT
     outputs:
       encrypted-value: ${{ steps.process.outputs.encrypted-value }}
