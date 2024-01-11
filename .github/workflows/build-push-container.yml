@@ -95,6 +95,6 @@ jobs:
           docker build . -f ${{ inputs.dockerfile }} -t ${{ steps.get_container_ref.outputs.container_ref }} --build-arg 'WINTDEV_NUGET_ACCESSTOKEN=${{ secrets.nuget-read-pat }}'
 
       - name: Push
-        if: ${{ inputs.no-push }}
+        if: ${{ inputs.no-push != true }}
         run: |
           docker push ${{ steps.get_container_ref.outputs.container_ref }}
