@@ -10,8 +10,8 @@ on:
         description: 'The name of the storage container.'
         required: true
         type: string
-      source:
-        description: 'The path to the location of the contents to upload to the blob storage.'
+      artifacts-name:
+        description: 'The name of the artifacts to download and upload to the blob storage.'
         required: true
         type: string
 
@@ -22,15 +22,25 @@ on:
 
 jobs:
   ensure-storage-container:
-    uses: WintDev/actions/.github/workflows/ensure-storage-container.yml@experimental
+    uses: ./.github/workflows/ensure-storage-container.yml
     with:
+      storage-account-name: ${{ inputs.storage-account-name }}
       storage-container-name: ${{ inputs.storage-container-name }}
     secrets: inherit
 
   blob_upload:
     name: 'upload data to azure blob storage'
     runs-on: ubuntu-latest
+    env:
+      BLOB_SOURCE: blob_source
+
     steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v2
+        with:
+            name: ${{ inputs.artifacts-name }}
+            path: ${{ env.BLOB_SOURCE }}
+
       - name: 'az login'
         uses: azure/login@v1
         with:
@@ -39,4 +49,4 @@ jobs:
       - name: 'upload blob.'
         shell: bash
         run: |
-          az storage blob upload-batch --account-name ${{ inputs.storage-account-name }} --container ${{ inputs.storage-container-name }} --source ${{ inputs.source }}
+          az storage blob upload-batch --account-name ${{ inputs.storage-account-name }} --container ${{ inputs.storage-container-name }} --source ${{ env.BLOB_SOURCE }}

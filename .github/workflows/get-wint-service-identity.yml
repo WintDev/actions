@@ -103,11 +103,10 @@ jobs:
         run: |
           echo "rg=${{ env.RESOURCE_GROUP}}" >> $GITHUB_OUTPUT
 
-
   assign_app_configuration_access:
     name: Assign App Configuration access
     needs: get_managed_id
-    uses: WintDev/actions/.github/workflows/assign-app-configuration-access.yml@experimental
+    uses: ./.github/workflows/assign-app-configuration-access.yml
     with:
       principal-id: ${{ needs.get_managed_id.outputs.principal_id }}
     secrets:
@@ -116,7 +115,7 @@ jobs:
   assign_keyvault_access:
     name: Assign key vault access
     needs: get_managed_id
-    uses: WintDev/actions/.github/workflows/assign-kv-access.yml@experimental
+    uses: ./.github/workflows/assign-kv-access.yml
     with:
       principal-id: ${{ needs.get_managed_id.outputs.principal_id }}
       environment: ${{ inputs.environment }}
