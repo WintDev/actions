@@ -13,15 +13,20 @@ on:
         type: string
         default: 'Dockerfile'
       working-directory:
-        description: The 
+        description: The working directory from which the docker build would be performed.
         type: string
-
+        default: '.'
       container-name:
         description: 'The name of the container. If no name is provided, the repository environment variable value is used as the container name.'
         type: string
       tag:
         description: 'The tag for which the cotainer would be pushed to the ACR. If not specified, the tag will be calculated based on the ref.'
         type: string
+      no-push:
+        description: 'Indicates if the built image WOULD NOT be pushed to the ACR. The default value is false, indicating that the image WOULD be pushed to ACR.'
+        type: boolean
+        required: false
+        default: false
 
     secrets:
       username:
@@ -90,5 +95,6 @@ jobs:
           docker build . -f ${{ inputs.dockerfile }} -t ${{ steps.get_container_ref.outputs.container_ref }} --build-arg 'WINTDEV_NUGET_ACCESSTOKEN=${{ secrets.nuget-read-pat }}'
 
       - name: Push
+        if: ${{ inputs.no-push != true }}
         run: |
           docker push ${{ steps.get_container_ref.outputs.container_ref }}
