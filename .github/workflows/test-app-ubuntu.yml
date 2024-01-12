@@ -127,7 +127,7 @@ jobs:
         if: ${{ inputs.integration-test-environment == true }}
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          creds: ${{ secrets.azure-credentials }}
 
       - name: Download test environment variables
         if: ${{ inputs.env-vars-artifacts != '' }}
