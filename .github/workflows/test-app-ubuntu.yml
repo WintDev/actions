@@ -40,7 +40,7 @@ on:
         default: false
         type: boolean
       env-vars-artifacts:
-        description: The name of an uploaded artifacts txt file containing a list of environment variable(s) used in the integration test environment. Space-separated values in 'key=value' format. Use an empty string if no environment variables is required for integration testing. Prefix value with 'secretref:' to reference a secret.
+        description: The name of an uploaded artifacts txt file containing a list of environment variable(s) used in the integration test environment. new-line-separated values in 'key=value' format. Use an empty string if no environment variables is required for integration testing. Prefix value with 'secretref:' to reference a secret.
         required: false
         default: ''
         type: string
@@ -140,12 +140,11 @@ jobs:
         if: ${{ inputs.env-vars-artifacts != '' }}
         shell: bash
         run: |
-          env_vars=$(cat ${{ env.ENV_VARS_ARTIFACTS_PATH }}/${{ inputs.env-vars-artifacts-file-name }})
-            for kv in $env_vars; do
-            key=${kv%%=*}
-            value=${kv#*=}
+          while IFS= read -r line; do
+            key=${line%%=*}
+            value=${line#*=}
             echo "$key=$value" >> $GITHUB_ENV
-          done
+          done < ${{ env.ENV_VARS_ARTIFACTS_PATH }}/${{ inputs.env-vars-artifacts-file-name }}
 
       - name: Get nuget cache key suffix
         id: get_cache_key
