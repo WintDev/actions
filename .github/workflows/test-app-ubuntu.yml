@@ -123,14 +123,20 @@ jobs:
         run: |
           echo "WINT_INTEGRATION_TEST_ENVIRONMENT=${{ inputs.integration-test-environment }}" >> $GITHUB_ENV
 
-      - name: Download integration test environment variables
+      - name: login to azure
+        if: ${{ inputs.integration-test-environment == true }}
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Download test environment variables
         if: ${{ inputs.env-vars-artifacts != '' }}
         uses: actions/download-artifact@v2
         with:
           name: ${{ inputs.env-vars-artifacts }}
           path: ${{ env.ENV_VARS_ARTIFACTS_PATH }}
 
-      - name: Set integration test environment variables
+      - name: Set test environment variables
         if: ${{ inputs.env-vars-artifacts != '' }}
         shell: bash
         run: |
