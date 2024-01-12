@@ -35,15 +35,21 @@ on:
         default: '8'
         type: string
       integration-test-environment:
-        description: '1 to run tests marked as integration tests; otherwise, 0. The default value is 0.'
+        description: 'true to run tests marked as integration tests; otherwise, false. The default value is false.'
         required: false
-        default: '0'
-        type: string
-      env-vars:
-        description: A list of environment variable(s) for the container. Space-separated values in 'key=value' format. Use an empty string to clear existing values. Prefix value with 'secretref:' to reference a secret.
+        default: false
+        type: boolean
+      env-vars-artifacts:
+        description: The name of an uploaded artifacts txt file containing a list of environment variable(s) used in the integration test environment. Space-separated values in 'key=value' format. Use an empty string if no environment variables is required for integration testing. Prefix value with 'secretref:' to reference a secret.
         required: false
         default: ''
         type: string
+      env-vars-artifacts-file-name:
+        description: The name of the env-vars txt file in the env-vars-artifacts artifacts. If not specified, the default value env-vars.txt is used
+        required: false
+        default: 'env-vars.txt'
+        type: string
+
       test-filter:
         required: false
         default: 'trigger!=manual'
@@ -73,6 +79,7 @@ jobs:
     env:
       CONFIGURATION: release
       WINT_GITHUB_NUGET_SOURCE_URL: 'https://nuget.pkg.github.com/WintDev/index.json'
+      ENV_VARS_ARTIFACTS_PATH: env-vars
       COVERAGE_REPORT_PATH: 'coverage-report'
       COVERAGE_REPORT_ARTIFACT: 'coverage-report'
 
@@ -90,15 +97,6 @@ jobs:
             TEST_SOURCES=${{ inputs.solution-name }}
           fi
           echo "test_sources=$TEST_SOURCES" >> $GITHUB_OUTPUT
-
-      - name: set_environment_variables
-        run: |
-          IFS=' ' read -ra ADDR <<< "${{ inputs.env-vars }}"
-          for i in "${ADDR[@]}"; do
-            key=$(echo $i | cut -f1 -d=)
-            value=$(echo $i | cut -f2 -d=)
-            echo "$key=$value" >> $GITHUB_ENV
-          done
 
       - name: Install dotnet
         uses: actions/setup-dotnet@v3
@@ -124,6 +122,24 @@ jobs:
       - name: Setup Integration test environment
         run: |
           echo "WINT_INTEGRATION_TEST_ENVIRONMENT=${{ inputs.integration-test-environment }}" >> $GITHUB_ENV
+
+      - name: Download integration test environment variables
+        if: ${{ inputs.env-vars-artifacts != '' }}
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ inputs.env-vars-artifacts }}
+          path: ${{ env.ENV_VARS_ARTIFACTS_PATH }}
+
+      - name: Set integration test environment variables
+        if: ${{ inputs.env-vars-artifacts != '' }}
+        shell: bash
+        run: |
+          env_vars=$(cat ${{ env.ENV_VARS_ARTIFACTS_PATH }}/${{ inputs.env-vars-artifacts-file-name }})
+            for kv in $env_vars; do
+            key=${kv%%=*}
+            value=${kv#*=}
+            echo "$key=$value" >> $GITHUB_ENV
+          done
 
       - name: Get nuget cache key suffix
         id: get_cache_key
