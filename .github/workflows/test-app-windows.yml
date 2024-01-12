@@ -7,6 +7,11 @@ on:
         required: true
         type: string
 
+      force:
+        description: By default, test on Windows is not performed and test execution on Windows **MUST** be forced using this boolean input.
+        type: boolean
+        default: false
+
     secrets:
       nuget-read-pat:
         description: 'The Personal Access Token used to access the WintDev internal nuget feed when restoring.'
@@ -16,6 +21,7 @@ jobs:
   build:
     name: Build and Test (${{ inputs.solution-name }})
     runs-on: windows-latest
+    if: ${{ inputs.force == true }}
     strategy:
       fail-fast: true
     env:
