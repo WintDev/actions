@@ -84,8 +84,7 @@ on:
         required: false
       encrypt_key:
         description: 'The cryptographic key used when decrypting the environment variables artifacts contents.'
-        required: true
-  
+        required: false
 
 jobs:
   test:
