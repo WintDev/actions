@@ -100,7 +100,7 @@ jobs:
       ENV_VARS_ARTIFACTS_PATH: env-vars
       COVERAGE_REPORT_PATH: 'coverage-report'
       COVERAGE_REPORT_ARTIFACT: 'coverage-report'
-      ENV_VARS: ''
+      ENV_VARS_FILE: '9149C33B-FF9F-42F4-80B3-173C9E66C2D4.txt'
 
     steps:
       - name: get_test_sources
@@ -162,16 +162,14 @@ jobs:
           BASE_64=$(cat ${{ env.ENV_VARS_ARTIFACTS_PATH }}/${{ inputs.env-vars-artifacts-file-name }})
 
           BINARY_ENCRYPTED=$(echo "$BASE_64" | base64 --decode)
-          ENV_VARS=$(echo -n "$BINARY_ENCRYPTED" | openssl enc -${{ inputs.env-vars-cipher }} -${{ inputs.env-vars-key-derivation }} -d -salt -k "${{ secrets.encrypt_key }}");
-          
-          echo "ENV_VARS=$ENV_VARS" >> $GITHUB_ENV
+          ENV_VARS_DECRYPTED=$(echo -n "$BINARY_ENCRYPTED" | openssl enc -${{ inputs.env-vars-cipher }} -${{ inputs.env-vars-key-derivation }} -d -salt -k "${{ secrets.encrypt_key }}");
+          echo "$ENV_VARS_DECRYPTED" > ${{ env.ENV_VARS_FILE }}
 
-      - name: Extract environment variables
+      - name: Map environment variable artifacts file
         if: ${{ inputs.env-vars-artifacts != '' && inputs.env-vars-artifacts-enctypted == false }}
         shell: bash
         run: |
-          ENV_VARS=$(cat ${{ env.ENV_VARS_ARTIFACTS_PATH }}/${{ inputs.env-vars-artifacts-file-name }})
-          echo "ENV_VARS=$ENV_VARS" >> $GITHUB_ENV
+          echo "ENV_VARS_FILE=${{ env.ENV_VARS_ARTIFACTS_PATH }}/${{ inputs.env-vars-artifacts-file-name }}" >> $GITHUB_ENV
 
       - name: Set test environment variables
         if: ${{ inputs.env-vars-artifacts != '' }}
@@ -181,7 +179,7 @@ jobs:
             key=${line%%=*}
             value=${line#*=}
             echo "$key=$value" >> $GITHUB_ENV
-          done <<< ${{ env.ENV_VARS }}
+          done < ${{ env.ENV_VARS_FILE }}
   
       # - name: Set test environment variables
       #   if: ${{ inputs.env-vars-artifacts != '' }}
