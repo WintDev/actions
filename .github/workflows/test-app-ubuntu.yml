@@ -160,8 +160,10 @@ jobs:
         shell: bash
         run: |
           BASE_64=$(cat ${{ env.ENV_VARS_ARTIFACTS_PATH }}/${{ inputs.env-vars-artifacts-file-name }})
+          echo "base64: $BASE_64"
 
           BINARY_ENCRYPTED=$(echo "$BASE_64" | base64 --decode)
+          echo "binary: $BINARY_ENCRYPTED"
           ENV_VARS_DECRYPTED=$(echo -n "$BINARY_ENCRYPTED" | openssl enc -${{ inputs.env-vars-cipher }} -${{ inputs.env-vars-key-derivation }} -d -salt -k "${{ secrets.encrypt_key }}");
           echo "$ENV_VARS_DECRYPTED" > ${{ env.ENV_VARS_FILE }}
 
