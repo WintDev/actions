@@ -49,7 +49,22 @@ on:
         required: false
         default: 'env-vars.txt'
         type: string
-
+      env-vars-artifacts-enctypted:
+        description: 'true if the the uploaded environment variable artifacts are encrypted; otherwise, false. If true, ensure the  env-vars-cipher, env-vars-key-derivation and the secret encrypt_key are specified accordingly.'
+        required: false
+        default: false
+        type: boolean
+      env-vars-cipher:
+        type: string
+        description: 'The name of the resource group where the key vault that will be used by the app deployed to production resides.'
+        required: false
+        default: aes-256-cbc
+      env-vars-key-derivation:
+        description: 'The key derivation algorithm to use. The default value is PBKDF2 (Password-Based Key Derivation Function 2).'
+        required: false
+        default: pbkdf2
+        type: string
+  
       test-filter:
         required: false
         default: 'trigger!=manual'
@@ -67,6 +82,10 @@ on:
       azure-credentials:
         description: 'The credentials used to authenticate against azure. Note: requires claims to manage user-assigned managed identity.'
         required: false
+      encrypt_key:
+        description: 'The cryptographic key used when decrypting the environment variables artifacts contents.'
+        required: true
+  
 
 jobs:
   test:
@@ -82,6 +101,7 @@ jobs:
       ENV_VARS_ARTIFACTS_PATH: env-vars
       COVERAGE_REPORT_PATH: 'coverage-report'
       COVERAGE_REPORT_ARTIFACT: 'coverage-report'
+      ENV_VARS: ''
 
     steps:
       - name: get_test_sources
@@ -129,12 +149,30 @@ jobs:
         with:
           creds: ${{ secrets.azure-credentials }}
 
-      - name: Download test environment variables
+      - name: Download environment variables artifacts
         if: ${{ inputs.env-vars-artifacts != '' }}
         uses: actions/download-artifact@v2
         with:
           name: ${{ inputs.env-vars-artifacts }}
           path: ${{ env.ENV_VARS_ARTIFACTS_PATH }}
+      
+      - name: Decrypt environment variables
+        if: ${{ inputs.env-vars-artifacts != '' && inputs.env-vars-artifacts-enctypted == true }}
+        shell: bash
+        run: |
+          BASE_64=$(cat ${{ env.ENV_VARS_ARTIFACTS_PATH }}/${{ inputs.env-vars-artifacts-file-name }})
+
+          BINARY_ENCRYPTED=$(echo "$BASE_64" | base64 --decode)
+          ENV_VARS=$(echo -n "$BINARY_ENCRYPTED" | openssl enc -${{ inputs.env-vars-cipher }} -${{ inputs.env-vars-key-derivation }} -d -salt -k "${{ secrets.encrypt_key }}");
+          
+          echo "ENV_VARS=$ENV_VARS" >> $GITHUB_ENV
+
+      - name: Extract environment variables
+        if: ${{ inputs.env-vars-artifacts != '' && inputs.env-vars-artifacts-enctypted == false }}
+        shell: bash
+        run: |
+          ENV_VARS=$(cat ${{ env.ENV_VARS_ARTIFACTS_PATH }}/${{ inputs.env-vars-artifacts-file-name }})
+          echo "ENV_VARS=$ENV_VARS" >> $GITHUB_ENV
 
       - name: Set test environment variables
         if: ${{ inputs.env-vars-artifacts != '' }}
@@ -144,7 +182,17 @@ jobs:
             key=${line%%=*}
             value=${line#*=}
             echo "$key=$value" >> $GITHUB_ENV
-          done < ${{ env.ENV_VARS_ARTIFACTS_PATH }}/${{ inputs.env-vars-artifacts-file-name }}
+          done <<< ${{ env.ENV_VARS }}
+  
+      # - name: Set test environment variables
+      #   if: ${{ inputs.env-vars-artifacts != '' }}
+      #   shell: bash
+      #   run: |
+      #     while IFS= read -r line; do
+      #       key=${line%%=*}
+      #       value=${line#*=}
+      #       echo "$key=$value" >> $GITHUB_ENV
+      #     done < ${{ env.ENV_VARS_ARTIFACTS_PATH }}/${{ inputs.env-vars-artifacts-file-name }}
 
       - name: Get nuget cache key suffix
         id: get_cache_key
