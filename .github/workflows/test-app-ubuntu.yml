@@ -267,7 +267,7 @@ jobs:
         shell: bash
         run: |
           reportgenerator \
-          "-reports:${{ env.SOURCE_PATH }}/*.xml" \
+          "-reports:${{ env.SOURCE_PATH }}/**/*.xml" \
           "-targetdir:${{ env.REPORT_PATH }}" \
           "-reporttypes:Cobertura" \
           "-historydir:${{ env.HISTORY_PATH }}"
