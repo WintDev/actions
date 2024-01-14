@@ -74,6 +74,11 @@ on:
         required: false
         default: 1
         type: number
+      coverage-persist:
+        description: 'true if coverage reports would be persisted to blob storage regardless of the ref.; otherwise, false to let the ref. decide. The default value is false.'
+        type: boolean
+        default: false
+        required: false
 
     secrets:
       nuget-read-pat:
@@ -236,7 +241,7 @@ jobs:
 
   report_generator:
     name: 'Create coverage report'
-    if: ${{ github.ref_name == needs.test.outputs.head_branch && inputs.coverage-report-retention-days >= 1 }}
+    if: ${{ (github.ref_name == needs.test.outputs.head_branch || inputs.coverage-persist ) && inputs.coverage-report-retention-days >= 1 }}
     runs-on: ubuntu-latest
     needs: test
     env:
