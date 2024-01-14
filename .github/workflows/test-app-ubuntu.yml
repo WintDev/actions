@@ -246,9 +246,11 @@ jobs:
     needs: test
     env:
       COVERAGE_REPORT_ARTIFACT: 'coverage-report'
-      ARTIFACTS_PATH: report_data
-      REPORTS_PATH: results
-      RESULT_ARTIFACTS_NAME: report-generator-results
+      SOURCE_PATH: report_data
+      REPORT_PATH: results
+      REPORT_ARTIFACTS_NAME: report-generator-results
+      HISTORY_ARTIFACTS_NAME: report-generator-history
+      HISTORY_PATH: report-generator-history
 
     steps:
       - name: Install dotnet-reportgenerator
@@ -259,18 +261,29 @@ jobs:
         uses: actions/download-artifact@v2
         with:
             name: '${{ env.COVERAGE_REPORT_ARTIFACT }}-${{ github.run_id }}'
-            path: ${{ env.ARTIFACTS_PATH }}
+            path: ${{ env.SOURCE_PATH }}
 
       - name: Run ReportGenerator
         shell: bash
         run: |
-          reportgenerator "-reports:${{ env.ARTIFACTS_PATH }}/*.xml" "-targetdir:${{ env.REPORTS_PATH }}" "-reporttypes:Cobertura"
+          reportgenerator \
+          "-reports:${{ env.SOURCE_PATH }}/*.xml" \
+          "-targetdir:${{ env.REPORT_PATH }}" \
+          "-reporttypes:Cobertura" \
+          "-historydir:${{ env.HISTORY_PATH }}"
 
-      - name: Upload reportgenerator artifacts
+      - name: Upload reportgenerator history artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: '${{ env.RESULT_ARTIFACTS_NAME }}-${{ github.run_id }}'
-          path: ${{ env.REPORTS_PATH }}
+          name: ${{ env.HISTORY_ARTIFACTS_NAME }}
+          path: ${{ env.HISTORY_PATH }}
+          retention-days: 1
+
+      - name: Upload reportgenerator results artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.REPORT_ARTIFACTS_NAME }}
+          path: ${{ env.REPORT_PATH }}
           retention-days: 1
 
   calculate-storage-container-name:
@@ -294,5 +307,5 @@ jobs:
     with:
       storage-account-name: wintcodecoverage
       storage-container-name: ${{ needs.calculate-storage-container-name.outputs.storage_container_name }}
-      artifacts-name: 'report-generator-results-${{ github.run_id }}'
+      artifacts-name: report-generator-history
     secrets: inherit
