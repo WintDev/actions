@@ -49,4 +49,4 @@ jobs:
       - name: 'upload blob.'
         shell: bash
         run: |
-          az storage blob upload-batch --account-name ${{ inputs.storage-account-name }} --container ${{ inputs.storage-container-name }} --source ${{ env.BLOB_SOURCE }}
+          az storage blob upload-batch --account-name ${{ inputs.storage-account-name }} --destination ${{ inputs.storage-container-name }} --source ${{ env.BLOB_SOURCE }}
