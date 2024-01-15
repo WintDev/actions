@@ -172,7 +172,7 @@ jobs:
           # echo "binary: $BINARY_ENCRYPTED"
           # # ENV_VARS_DECRYPTED=$(echo -n "$BINARY_ENCRYPTED" | openssl enc -${{ inputs.env-vars-cipher }} -${{ inputs.env-vars-key-derivation }} -d -salt -k "${{ secrets.encrypt_key }}");
           # openssl enc -${{ inputs.env-vars-cipher }} -${{ inputs.env-vars-key-derivation }} -d -salt -k "${{ secrets.encrypt_key }}" -in /tmp/encrypted.bin -out ${{ env.ENV_VARS_FILE }}
-          openssl enc -${{ inputs.env-vars-cipher }} -${{ inputs.env-vars-key-derivation }} -d -base64 -A -salt -k "${{ secrets.DECRYPTION_KEY }}" -in ${{ env.ENV_VARS_ARTIFACTS_PATH }}/${{ inputs.env-vars-artifacts-file-name }} -out ${{ env.ENV_VARS_FILE }}
+          openssl enc -${{ inputs.env-vars-cipher }} -${{ inputs.env-vars-key-derivation }} -d -base64 -A -salt -k "${{ secrets.encrypt_key }}" -in ${{ env.ENV_VARS_ARTIFACTS_PATH }}/${{ inputs.env-vars-artifacts-file-name }} -out ${{ env.ENV_VARS_FILE }}
 
       - name: Map environment variable artifacts file
         if: ${{ inputs.env-vars-artifacts != '' && inputs.env-vars-artifacts-enctypted == false }}
