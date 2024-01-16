@@ -22,9 +22,6 @@ on:
       account-key:
         description: 'The account key for the storage account.'
         required: true
-      # connection-string:
-      #   description: 'The connection string for the storage account.'
-      #   required: true
 
 jobs:
   ensure-storage-container:

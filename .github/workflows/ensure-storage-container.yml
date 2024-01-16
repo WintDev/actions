@@ -14,6 +14,10 @@ on:
       azure-credentials:
         description: 'The credentials to use to authenticate against azure.'
         required: true
+      account-key:
+          description: 'The account key for the storage account.'
+          required: true
+  
 jobs:
   create:
     name: 'Ensure storage account'
@@ -27,4 +31,7 @@ jobs:
       - name: 'Ensure storage container'
         shell: bash
         run: |
-           az storage container create --name ${{ inputs.storage-container-name }} --account-name ${{ inputs.storage-account-name }}
+           az storage container create \
+           --name ${{ inputs.storage-container-name }} \
+           --account-name ${{ inputs.storage-account-name }} \
+           --account-key ${{ secrets.account-key }}
