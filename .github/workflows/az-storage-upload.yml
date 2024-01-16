@@ -19,6 +19,12 @@ on:
       azure-credentials:
         description: 'The credentials to use to authenticate against azure.'
         required: true
+      account-key:
+        description: 'The account key for the storage account.'
+        required: true
+      # connection-string:
+      #   description: 'The connection string for the storage account.'
+      #   required: true
 
 jobs:
   ensure-storage-container:
@@ -49,4 +55,8 @@ jobs:
       - name: 'upload blob.'
         shell: bash
         run: |
-          az storage blob upload-batch --account-name ${{ inputs.storage-account-name }} --destination ${{ inputs.storage-container-name }} --source ${{ env.BLOB_SOURCE }}
+          az storage blob upload-batch \
+          --account-name ${{ inputs.storage-account-name }} \
+          --account-key ${{ secrets.account-key }} \
+          --destination ${{ inputs.storage-container-name }} \
+          --source ${{ env.BLOB_SOURCE }}
