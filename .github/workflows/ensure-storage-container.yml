@@ -20,7 +20,7 @@ on:
   
 jobs:
   create:
-    name: 'Ensure storage account'
+    name: 'Ensure storage container'
     runs-on: ubuntu-latest
     steps:
       - name: 'az login'
