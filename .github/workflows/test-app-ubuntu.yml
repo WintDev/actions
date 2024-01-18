@@ -90,7 +90,7 @@ on:
       encrypt_key:
         description: 'The cryptographic key used when decrypting the environment variables artifacts contents.'
         required: false
-      storage-account-key:
+      account-key:
         description: 'The account key used to access the account where code coverage artifacts would be stored.'
         required: false
 
@@ -295,6 +295,4 @@ jobs:
       storage-account-name: wintcodecoverage
       storage-container-name: ${{ needs.calculate-storage-container-name.outputs.storage_container_name }}
       artifacts-name: report-generator-history
-    secrets:
-      azure-credentials: ${{ secrets.azure-credentials }}
-      account-key: ${{ secrets.storage-account-key }}
+    secrets: inherit
