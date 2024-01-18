@@ -154,7 +154,7 @@ jobs:
         if: ${{ inputs.integration-test-environment == true }}
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.azure-credentials }}
+          creds: ${{ secrets.azure-credentials }}          
 
       - name: Download env-vars artifacts
         if: ${{ inputs.env-vars-artifacts != '' }}
@@ -184,14 +184,14 @@ jobs:
             value=${line#*=}
             echo "$key=$value" >> $GITHUB_ENV
           done < ${{ env.ENV_VARS_FILE }}
-  
+
       - name: Get nuget cache key suffix
         id: get_cache_key
         shell: bash
         run: |
           HASH=${{ hashFiles('**/packages.lock.json') }}
           echo "hash=$HASH" >> $GITHUB_OUTPUT
-
+  
       - name: Cache nuget restore artifacts
         if: ${{ steps.get_cache_key.outputs.hash != '' }} 
         uses: actions/cache@v3
