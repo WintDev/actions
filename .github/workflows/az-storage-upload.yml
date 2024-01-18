@@ -32,6 +32,7 @@ jobs:
     secrets: inherit
 
   blob_upload:
+    needs: ensure-storage-container
     name: 'upload data to azure blob storage'
     runs-on: ubuntu-latest
     env:
