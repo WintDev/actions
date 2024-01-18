@@ -40,7 +40,7 @@ jobs:
 
     steps:
       - name: Download Artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
             name: ${{ inputs.artifacts-name }}
             path: ${{ env.BLOB_SOURCE }}
