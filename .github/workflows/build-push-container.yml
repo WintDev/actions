@@ -46,11 +46,11 @@ on:
 jobs:
   get_tag:
     name: 'Get Tag from ref'
-    uses: WintDev/actions/.github/workflows/get-container-tag.yml@main
+    uses: ./.github/workflows/get-container-tag.yml
 
   get_name:
     name: 'Calculate container name'
-    uses: WintDev/actions/.github/workflows/get-container-name.yml@main
+    uses: ./.github/workflows/get-container-name.yml
 
   push_container:
     name: BuildAndPush
