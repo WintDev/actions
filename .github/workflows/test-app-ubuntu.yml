@@ -158,7 +158,7 @@ jobs:
 
       - name: Download env-vars artifacts
         if: ${{ inputs.env-vars-artifacts != '' }}
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.env-vars-artifacts }}
           path: ${{ env.ENV_VARS_ARTIFACTS_PATH }}
@@ -220,7 +220,7 @@ jobs:
 
       - name: Upload Coverage Artifacts
         if: ${{ inputs.coverage-report-retention-days >= 1 }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: '${{ env.COVERAGE_REPORT_ARTIFACT }}-${{ github.run_id }}'
           path: '**/*.cobertura.xml'
@@ -245,7 +245,7 @@ jobs:
           dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0
 
       - name: Download Artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
             name: '${{ env.COVERAGE_REPORT_ARTIFACT }}-${{ github.run_id }}'
             path: ${{ env.SOURCE_PATH }}
@@ -260,14 +260,14 @@ jobs:
           "-historydir:${{ env.HISTORY_PATH }}"
 
       - name: Upload reportgenerator history artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.HISTORY_ARTIFACTS_NAME }}
           path: ${{ env.HISTORY_PATH }}
           retention-days: 1
 
       - name: Upload reportgenerator results artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.REPORT_ARTIFACTS_NAME }}
           path: ${{ env.REPORT_PATH }}
