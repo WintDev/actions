@@ -21,6 +21,7 @@ on:
         default: 'ErrorsOnly'
         type: string
       build-verbosity:
+        description: 'The verbosity used for the dotnet build action. The default value is quiet.'
         required: false
         default: 'quiet'
         type: string
@@ -56,7 +57,7 @@ on:
         type: boolean
       env-vars-cipher:
         type: string
-        description: 'The name of the resource group where the key vault that will be used by the app deployed to production resides.'
+        description: 'The cipher to use for decrypt the env-vars-artifacts. The default value is aes-256-cbc. For a list of available ciphers, call **openssl enc -ciphers|list'
         required: false
         default: aes-256-cbc
       env-vars-key-derivation:
@@ -82,10 +83,10 @@ on:
 
     secrets:
       nuget-read-pat:
-        description: 'The Personal Access Token used to access the WintDev internal nuget feed when restoring.'
+        description: 'The Personal Access Token (PAT) used to access the WintDev internal nuget feed when restoring.'
         required: true
       azure-credentials:
-        description: 'The credentials used to authenticate against azure. Note: requires claims to manage user-assigned managed identity.'
+        description: 'The credentials used to login to azure. These credentials are used for scaffolding an azure identity used in integration testing **and** for managing persisting code coverage history reports. If these credentials are not supplied, no code coverage history will be persisted and, if the integration-test-environment input is set to true, any integration test that relies on an azure identity will fail.'
         required: false
       encrypt_key:
         description: 'The cryptographic key used when decrypting the environment variables artifacts contents.'
@@ -297,7 +298,7 @@ jobs:
         id: set_has_azure_credentials
         shell: bash
         run: |
-          if [ -n "${{ secrets.azure_credentials }}" ]; then
+          if [ -n "${{ secrets.azure-credentials }}" ] && [ -n "${{ secrets.account-key }}"]; then
             echo "has_azure_credentials=true" >> $GITHUB_OUTPUT
           else
             echo "has_azure_credentials=false" >> $GITHUB_OUTPUT
