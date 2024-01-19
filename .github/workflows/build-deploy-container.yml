@@ -107,7 +107,7 @@ jobs:
       working-directory: ${{ inputs.working-directory }}
       container-name: ${{ needs.set_name.outputs.name }}
       tag: ${{ needs.set_tag.outputs.tag }}
-      secrets: inherit
+    secrets: inherit
 
   push_container_latest:
     name: 'Build and Push latest docker container'
@@ -120,7 +120,7 @@ jobs:
       working-directory: ${{ inputs.working-directory }}
       container-name: ${{ needs.set_name.outputs.name }}
       tag: latest
-      secrets: inherit
+    secrets: inherit
 
   push_container_dev:
     name: 'Build and Push dev docker container'
@@ -133,7 +133,7 @@ jobs:
       working-directory: ${{ inputs.working-directory }}
       container-name: ${{ needs.set_name.outputs.name }}
       tag: dev
-      secrets: inherit
+    secrets: inherit
 
   get_service_identity:
     uses: ./.github/workflows/get-wint-service-identity.yml
