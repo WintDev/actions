@@ -14,7 +14,9 @@ There are four versions available.
 - v5
   - Use this version for managing Azure Function Apps targeting Azure Functions v4 with code targeting .net7. __and__ when working with [environments](https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment#using-an-environment) when deploying web- or function apps.  
 
-**Note:** v2 is kept for legacy support. It _may_ be used when there is a need to manage pushing nuget packages and deployment of Azure Function apps manually in the workflow.
+**Note:** **v2** is kept for legacy support. It _may_ be used when there is a need to manage pushing nuget packages and deployment of Azure Function apps manually in the workflow.
+
+**Note:** Since the release of net8, **V4** and **V5** **SHOULD** be considered **obsolete**. Make sure to use the __@main__ ref. whenever these refs. have been used previously.
 
 ## Workflows
 **Note:** Because of the [github actions reusable workflow limitations](https://docs.github.com/en/actions/learn-github-actions/reusing-workflows#limitations), there are decicated shared workflows for testing on the Windows and Ubuntu environments respectively. For more information on this,  see: [test-app-windows](#testappwindows), and [test-app-ubuntu](#testappubuntu).
@@ -207,14 +209,56 @@ Call this workflow to build and test a solution on the Ubuntu operating system.
 
 #### Inputs
 - solution-name
-  - The name of solution to build, test and publish. Example **mySolution.sln**.
+  - The name of solution to build and test. Example **mySolution.sln**.
+
+- test-sources
+  - The comma-separated list of path/testassembly to run as test(s). If not specified, the param solution-name is used as the source of a single test.
+- warning-level
+  - The warning level of the restore and build actions. The default value is 0, indicating that no warning messages are displayed
+- console-logger-parameters
+  - The parameters passed to the console logger in restore and build commands. If not specified, the default value ErrorsOnly is used.'
+- build-verbosity
+  - The verbosity used for the dotnet build action. The default value is quiet.
+- test-verbosity
+  - The verbosity of the test console logger. If not specified, the default value quiet is used.
+- dotnet-version
+  - The main version of .net to install. The default value is 8.
+- integration-test-environment
+  - true to run tests marked as integration tests; otherwise, false. The default value is false.'
+- env-vars-artifacts
+  - The name of an uploaded artifacts txt file containing a list of environment variable(s) used in the integration test environment. new-line-separated values in 'key=value' format. Use an empty string if no environment variables is required for integration testing. Prefix value with 'secretref:' to reference a secret.
+- env-vars-artifacts-file-name
+  - The name of the env-vars txt file in the env-vars-artifacts artifacts. If not specified, the default value env-vars.txt is used.
+- env-vars-artifacts-encrypted
+  - true if the the uploaded environment variable artifacts are encrypted; otherwise, false. If true, ensure the  env-vars-cipher, env-vars-key-derivation and the secret encrypt_key are specified accordingly.
+  
+  - env-vars-cipher:
+  - The cipher to use for decrypt the env-vars-artifacts. The default value is aes-256-cbc. For a list of available ciphers, call 
+  ```bash
+  openssl enc -ciphers
+  ```
+- env-vars-key-derivation
+  - The key derivation algorithm to use. The default value is pbkdf2 (Password-Based Key Derivation Function 2). **NOTE:** The value specified **SHALL** correlate to the key derivation algorithm used to encrypt the env-vars-artifacts.
+  
+- test-filter
+  - The conditional expression used to filter the tests being executed. The default value is __trigger!=manual__, indicating that tests having the manual trigger attribute specified would not be executed.
+- coverage-report-retention-days:
+  - The number of days to retain the code coverage report artifact named coverage-report. If a number less than 1 is specified, no code coverage report artifact is created. The default value is 1 day(s).
 
 #### Secrets
 - nuget-read-pat
   - The Personal Access Token used to access the WintDev internal nuget feed during restore. 
+- azure-credentials
+  - The credentials used to login to azure. These credentials are used for scaffolding an azure identity used in integration testing **and** for managing persisting code coverage history reports. If these credentials are not supplied, no code coverage history will be persisted and, if the integration-test-environment input is set to true, any integration test that relies on an azure identity will fail.
+- encrypt_key:
+  - The cryptographic key used when decrypting the environment variables artifacts contents. If the input **env-vars-artifacts-encrypted** is specified, this value has to match the encryption key specified when encrypting the env-vars-artifacts.
+- account-key:
+  - The account key used to access the storage account where code coverage artifacts would be stored.
+
+**Note:** To use the default persist model of test coverage history artifacts, ensure that the __azure-credentials__ and __account-key__ secrets are supplied.
 
 #### Example
-The example below builds a solution, MyService.sln and publishes an artifact for the app called MyService
+The example below peforms tests in a solution, MyService.sln and if run from the default branch of the repository,  publishes the coverage history report to azure blob storage.
 ```yaml
 jobs:
   build:
@@ -224,14 +268,19 @@ jobs:
       solution-name: Wint.MyService.sln
     secrets:
       nuget-read-pat: ${{ secrets.NUGET_READ_PAT }}
+      azure-credentials: ${{ secrets.AZURE_CREDENTIALS }}
+      account-key: ${{ secrets.WINTCODECOVERAGE_KEY }}
 ```
 
 ### <a name="testappwindows"></a>test-app-windows (test-app-windows.yml)
 Call this workflow to build and test a solution on the Windows operating system.
+**Note:** By convention, __test-app-windows__ will perform the build and test jobs only if the **force** input is specified and set to **true**. This **SHOULD** be considiered only when the system under test will be deployed to a Windows host.
 
 #### Inputs
 - solution-name
   - The name of solution to build, test and publish. Example **mySolution.sln**.
+- force
+  - **true** to perform build and test jobs; otherwise, **false**. The default value is **false**, indicating that **no** action is performed when calling the workflow.
 
 #### Secrets
 - nuget-read-pat
