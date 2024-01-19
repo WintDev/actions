@@ -1,0 +1,37 @@
+name: ensure-storage-container
+on:
+  workflow_call:
+    inputs:
+      storage-account-name:
+        description: 'The name of the azure storage account.'
+        required: true
+        type: string
+      storage-container-name:
+        description: 'The name of the storage container.'
+        required: true
+        type: string
+    secrets:
+      azure-credentials:
+        description: 'The credentials to use to authenticate against azure.'
+        required: true
+      account-key:
+          description: 'The account key for the storage account.'
+          required: true
+  
+jobs:
+  create:
+    name: 'Ensure storage container'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'az login'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.azure-credentials }}
+
+      - name: 'Ensure storage container'
+        shell: bash
+        run: |
+           az storage container create \
+           --name ${{ inputs.storage-container-name }} \
+           --account-name ${{ inputs.storage-account-name }} \
+           --account-key ${{ secrets.account-key }}

@@ -1,0 +1,60 @@
+name: az-storage-upload
+on:
+  workflow_call:
+    inputs:
+      storage-account-name:
+        description: 'The name of the azure storage account.'
+        required: true
+        type: string
+      storage-container-name:
+        description: 'The name of the storage container.'
+        required: true
+        type: string
+      artifacts-name:
+        description: 'The name of the artifacts to download and upload to the blob storage.'
+        required: true
+        type: string
+
+    secrets:
+      azure-credentials:
+        description: 'The credentials to use to authenticate against azure.'
+        required: true
+      account-key:
+        description: 'The account key for the storage account.'
+        required: true
+
+jobs:
+  ensure-storage-container:
+    uses: ./.github/workflows/ensure-storage-container.yml
+    with:
+      storage-account-name: ${{ inputs.storage-account-name }}
+      storage-container-name: ${{ inputs.storage-container-name }}
+    secrets: inherit
+
+  blob_upload:
+    needs: ensure-storage-container
+    name: 'upload data to azure blob storage'
+    runs-on: ubuntu-latest
+    env:
+      BLOB_SOURCE: blob_source
+
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+            name: ${{ inputs.artifacts-name }}
+            path: ${{ env.BLOB_SOURCE }}
+
+      - name: 'az login'
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.azure-credentials }}
+
+      - name: 'upload blob.'
+        shell: bash
+        run: |
+          az storage blob upload-batch \
+          --account-name ${{ inputs.storage-account-name }} \
+          --account-key ${{ secrets.account-key }} \
+          --destination ${{ inputs.storage-container-name }} \
+          --source ${{ env.BLOB_SOURCE }}

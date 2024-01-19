@@ -7,6 +7,18 @@ on:
         required: true
         type: string
 
+      force:
+        description: By default, test on Windows is not performed and test execution on Windows **MUST** be forced using this boolean input.
+        type: boolean
+        default: false
+
+      dotnet-version:
+          description: 'The main version of .net to install. The default value is 8.'
+          required: false
+          default: '8'
+          type: string
+  
+
     secrets:
       nuget-read-pat:
         description: 'The Personal Access Token used to access the WintDev internal nuget feed when restoring.'
@@ -16,6 +28,7 @@ jobs:
   build:
     name: Build and Test (${{ inputs.solution-name }})
     runs-on: windows-latest
+    if: ${{ inputs.force == true }}
     strategy:
       fail-fast: true
     env:
@@ -27,7 +40,7 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: |
-            7.0.x
+            ${{ inputs.dotnet-version }}.0.x
 
       - name: Add GitHub Nuget registry
         run: dotnet nuget add source --username WintDev --password ${{ secrets.nuget-read-pat }} --store-password-in-clear-text --name WintDev "${{ env.WINT_GITHUB_NUGET_SOURCE_URL }}"
