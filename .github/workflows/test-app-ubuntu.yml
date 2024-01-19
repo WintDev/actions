@@ -288,9 +288,25 @@ jobs:
           NAME="${NAME//[^a-zA-Z0-9]/-}"
           echo "name=$NAME" >> $GITHUB_OUTPUT
 
+  evaluate_azure_credentials:
+    runs-on: ubuntu-latest
+    outputs:
+      has_azure_credentials: ${{ steps.set_has_azure_credentials.outputs.has_azure_credentials }}
+    steps:
+      - name: evaluate azure_credentials
+        id: set_has_azure_credentials
+        shell: bash
+        run: |
+          if [ -n "${{ secrets.azure_credentials }}" ]; then
+            echo "has_azure_credentials=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_azure_credentials=false" >> $GITHUB_OUTPUT
+          fi
+
   persist-coverage-reports:
-    needs: calculate-storage-container-name
+    needs: [calculate-storage-container-name, evaluate_azure_credentials]
     uses: ./.github/workflows/az-storage-upload.yml
+    if: ${{ needs.evaluate_azure_credentials.outputs.has_azure_credentials == 'true' }}
     with:
       storage-account-name: wintcodecoverage
       storage-container-name: ${{ needs.calculate-storage-container-name.outputs.storage_container_name }}
