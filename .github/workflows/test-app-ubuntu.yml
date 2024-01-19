@@ -298,7 +298,7 @@ jobs:
         id: set_has_azure_credentials
         shell: bash
         run: |
-          if [ -n "${{ secrets.azure-credentials }}" ] && [ -n "${{ secrets.account-key }}"]; then
+          if [ -n "${{ secrets.azure-credentials }}" ] && [ -n "${{ secrets.account-key }}" ]; then
             echo "has_azure_credentials=true" >> $GITHUB_OUTPUT
           else
             echo "has_azure_credentials=false" >> $GITHUB_OUTPUT
