@@ -65,21 +65,16 @@ on:
         required: false
         default: pbkdf2
         type: string
-  
       test-filter:
+        description: 'The conditional expression used to filter the tests being executed. The default value is trigger!=manual'
         required: false
         default: 'trigger!=manual'
         type: string
       coverage-report-retention-days:
-        description: 'The number of days to retain the code coverage report artifact named coverage-report. If a number less than 1 is specified, no code coverage report artifact is created. The default value is 1 day(s).'
+        description: 'The number of days to retain the code coverage report artifact named coverage-report. If a number less than 1 is specified, no code coverage report artifact is created and no coverage history is persisted. The default value is 1 day(s).'
         required: false
         default: 1
         type: number
-      coverage-persist:
-        description: 'true if coverage reports would be persisted to blob storage regardless of the ref.; otherwise, false to let the ref. decide. The default value is false.'
-        type: boolean
-        default: false
-        required: false
 
     secrets:
       nuget-read-pat:
@@ -229,7 +224,7 @@ jobs:
 
   report_generator:
     name: 'Create coverage report'
-    if: ${{ (github.ref_name == needs.test.outputs.head_branch || inputs.coverage-persist ) && inputs.coverage-report-retention-days >= 1 }}
+    if: ${{ github.ref_name == needs.test.outputs.head_branch && inputs.coverage-report-retention-days >= 1 }}
     runs-on: ubuntu-latest
     needs: test
     env:

@@ -210,7 +210,6 @@ Call this workflow to build and test a solution on the Ubuntu operating system.
 #### Inputs
 - solution-name
   - The name of solution to build and test. Example **mySolution.sln**.
-
 - test-sources
   - The comma-separated list of path/testassembly to run as test(s). If not specified, the param solution-name is used as the source of a single test.
 - warning-level
@@ -231,15 +230,13 @@ Call this workflow to build and test a solution on the Ubuntu operating system.
   - The name of the env-vars txt file in the env-vars-artifacts artifacts. If not specified, the default value env-vars.txt is used.
 - env-vars-artifacts-encrypted
   - true if the the uploaded environment variable artifacts are encrypted; otherwise, false. If true, ensure the  env-vars-cipher, env-vars-key-derivation and the secret encrypt_key are specified accordingly.
-  
-  - env-vars-cipher:
+- env-vars-cipher:
   - The cipher to use for decrypt the env-vars-artifacts. The default value is aes-256-cbc. For a list of available ciphers, call 
   ```bash
   openssl enc -ciphers
   ```
 - env-vars-key-derivation
   - The key derivation algorithm to use. The default value is pbkdf2 (Password-Based Key Derivation Function 2). **NOTE:** The value specified **SHALL** correlate to the key derivation algorithm used to encrypt the env-vars-artifacts.
-  
 - test-filter
   - The conditional expression used to filter the tests being executed. The default value is __trigger!=manual__, indicating that tests having the manual trigger attribute specified would not be executed.
 - coverage-report-retention-days:
