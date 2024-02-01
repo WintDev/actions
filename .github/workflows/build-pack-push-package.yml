@@ -30,13 +30,16 @@ on:
         required: true
 jobs:
   build:
-    name: Build (${{ inputs.assembly_url }})
+    name: Build (${{ inputs.assembly-url }})
     runs-on: windows-latest
     env:
       WINT_GITHUB_NUGET_SOURCE_URL: 'https://nuget.pkg.github.com/WintDev/index.json'
       CONFIGURATION: release
+    permissions:
+      packages: write
+
     steps:
-      - name: Install net7
+      - name: Install net${{ inputs.dotnet-version }}
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: |
