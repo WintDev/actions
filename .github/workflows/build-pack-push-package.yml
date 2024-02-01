@@ -37,7 +37,7 @@ jobs:
       CONFIGURATION: release
     permissions:
       packages: write
-
+      contents: read
     steps:
       - name: Install net${{ inputs.dotnet-version }}
         uses: actions/setup-dotnet@v3
