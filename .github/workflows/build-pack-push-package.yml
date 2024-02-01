@@ -31,6 +31,8 @@ jobs:
     env:
       WINT_GITHUB_NUGET_SOURCE_URL: 'https://nuget.pkg.github.com/WintDev/index.json'
       CONFIGURATION: release
+    permissions:
+      packages: write
     steps:
       - name: Install dotnet
         uses: actions/setup-dotnet@v1
