@@ -2,6 +2,11 @@ name: build-push-container
 on:
   workflow_call:
     inputs:
+      runs-on:
+        description: 'The type of machine to run the job on.'
+        required: false
+        type: string
+        default: 'ubuntu-latest'
       login-server:
         description: 'The name of the Azure Container Registry. Defaults to wintcontainer.azurecr.io'
         required: true
@@ -55,7 +60,7 @@ jobs:
   push_container:
     name: BuildAndPush
     needs: [get_tag, get_name]
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
 
     outputs:
       container_ref: ${{ steps.get_container_ref.outputs.container_ref }}

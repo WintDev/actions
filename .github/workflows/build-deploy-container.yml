@@ -2,6 +2,11 @@ name: build-deploy-container
 on:
   workflow_call:
     inputs:
+      runs-on:
+        description: 'The type of machine to run the job on.'
+        required: false
+        type: string
+        default: 'ubuntu-latest'      
       login-server:
         description: 'The name of the Azure Container Registry. Defaults to wintcontainer.azurecr.io'
         type: string
@@ -102,6 +107,7 @@ jobs:
     needs: [set_tag, set_name]
     uses: ./.github/workflows/build-push-container.yml
     with:
+      runs-on: ${{ inputs.runs-on }}
       login-server: ${{ inputs.login-server }}
       dockerfile: ${{ inputs.dockerfile }}
       working-directory: ${{ inputs.working-directory }}
@@ -115,6 +121,7 @@ jobs:
     needs: [set_name]
     uses: ./.github/workflows/build-push-container.yml
     with:
+      runs-on: ${{ inputs.runs-on }}
       login-server: ${{ inputs.login-server }}
       dockerfile: ${{ inputs.dockerfile }}
       working-directory: ${{ inputs.working-directory }}
@@ -128,6 +135,7 @@ jobs:
     needs: [set_name]
     uses: ./.github/workflows/build-push-container.yml
     with:
+      runs-on: ${{ inputs.runs-on }}
       login-server: ${{ inputs.login-server }}
       dockerfile: ${{ inputs.dockerfile }}
       working-directory: ${{ inputs.working-directory }}
@@ -146,7 +154,7 @@ jobs:
   deploy:
     name: Deploy azure container app
     needs: [push_container, get_service_identity]
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
     env:
       CONTAINER_APP_ENV_VARS: 'ASPNETCORE_ENVIRONMENT=${{ inputs.environment }} DOTNET_ENVIRONMENT=${{ inputs.environment }}'
       CONTAINER_APP_ENVIRONMENT: ${{ inputs.container-app-environment }}
