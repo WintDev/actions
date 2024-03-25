@@ -6,6 +6,11 @@ on:
         description: 'The name of the solution to build.'
         required: true
         type: string
+      runs-on:
+        description: 'The type of machine to run the workflow on. The default value is ubuntu-latest.'
+        required: false
+        default: 'ubuntu-latest'
+        type: string
       test-sources:
         description: 'The comma-separated list of path/testassembly to run as test(s). If not specified, the param solution-name is used as the source of a single test.'
         required: false
@@ -93,7 +98,7 @@ on:
 jobs:
   test:
     name: Build and Test (${{ inputs.solution-name }})
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
     continue-on-error: false
     outputs:
       head_branch: ${{ steps.get_head_branch_name.outputs.head_branch }}
@@ -225,7 +230,7 @@ jobs:
   report_generator:
     name: 'Create coverage report'
     if: ${{ github.ref_name == needs.test.outputs.head_branch && inputs.coverage-report-retention-days >= 1 }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
     needs: test
     env:
       COVERAGE_REPORT_ARTIFACT: 'coverage-report'
