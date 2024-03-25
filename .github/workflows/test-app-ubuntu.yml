@@ -2,6 +2,11 @@ name: test-app-ubuntu
 on:
   workflow_call:
     inputs:
+      runs-on:
+        description: 'The type of machine to run the job on. The default value is ubuntu-latest.'
+        required: false
+        default: ubuntu-latest
+        type: string
       solution-name:
         description: 'The name of the solution to build.'
         required: true
@@ -93,7 +98,8 @@ on:
 jobs:
   test:
     name: Build and Test (${{ inputs.solution-name }})
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
+
     continue-on-error: false
     outputs:
       head_branch: ${{ steps.get_head_branch_name.outputs.head_branch }}
