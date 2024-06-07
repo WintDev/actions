@@ -182,9 +182,10 @@ jobs:
         run: |
           cat ${{ env.ENV_VARS_FILE }}
           while IFS= read -r line; do
+            echo "row found"
             key=${line%%=*}
             value=${line#*=}
-            echo "Key: $key, Value: $value"  # Debugging output
+            echo "Key: $key, Value: $value"
             echo "$key=$value" >> $GITHUB_ENV
           done < ${{ env.ENV_VARS_FILE }}
 
