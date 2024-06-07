@@ -180,6 +180,7 @@ jobs:
         if: ${{ inputs.env-vars-artifacts != '' }}
         shell: bash
         run: |
+          cat ${{ env.ENV_VARS_FILE }}
           while IFS= read -r line; do
             key=${line%%=*}
             value=${line#*=}
