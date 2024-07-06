@@ -27,6 +27,11 @@ on:
       tag:
         description: 'The tag for which the cotainer would be pushed to the ACR. If not specified, the tag will be calculated based on the ref.'
         type: string
+      quiet:
+        description: 'Indicates if the docker build should be quiet. The default value is false, indicating that the build would not be quiet.'
+        type: boolean
+        required: false
+        default: false
       no-push:
         description: 'Indicates if the built image WOULD NOT be pushed to the ACR. The default value is false, indicating that the image WOULD be pushed to ACR.'
         type: boolean
@@ -94,10 +99,20 @@ jobs:
           CONTAINER_REF='${{ steps.get_container_fullname.outputs.name }}:${{ steps.calculate_tag.outputs.tag }}'
           echo "container_ref=$CONTAINER_REF" >> $GITHUB_OUTPUT
 
+      - name: Calculate build command
+        id: calculate_build_command
+        run: |
+          if [ "${{ inputs.quiet }}" = "true" ]; then
+            BUILD_COMMAND='docker build . -f ${{ inputs.dockerfile }} -t ${{ steps.get_container_ref.outputs.container_ref }} --quiet --build-arg "WINTDEV_NUGET_ACCESSTOKEN=${{ secrets.nuget-read-pat }}"'
+          else
+            BUILD_COMMAND='docker build . -f ${{ inputs.dockerfile }} -t ${{ steps.get_container_ref.outputs.container_ref }} --build-arg "WINTDEV_NUGET_ACCESSTOKEN=${{ secrets.nuget-read-pat }}"'
+          fi
+          echo "build_command=$BUILD_COMMAND" >> $GITHUB_OUTPUT
+
       - name: Build
         working-directory: ${{ inputs.working-directory }}
         run: |
-          docker build . -f ${{ inputs.dockerfile }} -t ${{ steps.get_container_ref.outputs.container_ref }} --build-arg 'WINTDEV_NUGET_ACCESSTOKEN=${{ secrets.nuget-read-pat }}'
+          ${{ steps.calculate_build_command.outputs.build_command }}
 
       - name: Push
         if: ${{ inputs.no-push != true }}
