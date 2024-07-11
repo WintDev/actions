@@ -71,9 +71,17 @@ jobs:
       container_ref: ${{ steps.get_container_ref.outputs.container_ref }}
 
     steps:
+      - name: df_h 1
+        run: |
+          df -h
+
       - name: Checkout
         uses: actions/checkout@v4
-      
+ 
+      - name: df_h 2
+        run: |
+          df -h
+        
       - name: Login
         uses: azure/docker-login@v1
         with:
